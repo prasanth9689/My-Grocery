@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "515942337063",
+    "project_id": "my-grocery-71445",
+    "storage_bucket": "my-grocery-71445.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:515942337063:android:6c065863c3142e9aa39c02",
+        "android_client_info": {
+          "package_name": "com.skyblue.mygrocery"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDYBJCOvX71so8SqTkDTzV11c2n7UqKKOk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

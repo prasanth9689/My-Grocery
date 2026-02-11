@@ -1,4 +1,4 @@
-package com.skyblue.mygrocery
+package com.skyblue.mygrocery.ui
 
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
