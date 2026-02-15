@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.skyblue.mygrocery.repository.CartRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -40,5 +41,16 @@ object DatabaseModule {
         @ApplicationContext context: Context
     ): FusedLocationProviderClient {
         return LocationServices.getFusedLocationProviderClient(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCartRepository(cartDao: CartDao): CartRepository {
+        return CartRepository(cartDao)
+    }
+
+    @Provides
+    fun provideCartDao(database: AppDatabase): CartDao {
+        return database.cartDao() // This tells Hilt how to get the Dao
     }
 }

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context=".ui.activity.OtpVerificationActivity">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="left|center"
+        android:text="@string/enter_otp"
+        android:textStyle="bold"
+        android:lineSpacingExtra="15dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="20dp"
+        android:textSize="35sp"
+        tools:ignore="RtlHardcoded" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/enter_6_digits_of_otp"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"/>
+
+        <LinearLayout
+            android:id="@+id/otp_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp">
+
+            <!-- Six single-character EditTexts -->
+            <EditText
+                android:id="@+id/et_otp_1"
+                style="@style/OtpEditText" />
+
+            <EditText
+                android:id="@+id/et_otp_2"
+                style="@style/OtpEditText" />
+
+            <EditText
+                android:id="@+id/et_otp_3"
+                style="@style/OtpEditText" />
+
+            <EditText
+                android:id="@+id/et_otp_4"
+                style="@style/OtpEditText" />
+
+            <EditText
+                android:id="@+id/et_otp_5"
+                style="@style/OtpEditText" />
+
+            <EditText
+                android:id="@+id/et_otp_6"
+                style="@style/OtpEditText" />
+
+        </LinearLayout>
+
+
+        <Button
+            android:id="@+id/verify"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:text="@string/verify"/>
+
+        <TextView
+            android:id="@+id/tv_resend"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:text="@string/resend_code"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="5dp"
+            android:textColor="?attr/colorPrimary" />
+
+    </LinearLayout>
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:scaleType="fitXY"
+        android:src="@drawable/ic_login_vector"
+        tools:ignore="ImageContrastCheck" />
+
+</RelativeLayout>

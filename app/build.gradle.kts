@@ -58,6 +58,10 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
+    // Google Auth
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
+    implementation("com.google.firebase:firebase-auth:24.0.1")
+
     // Retrofit + OkHttp + Kotlinx Serialization
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
@@ -106,4 +110,6 @@ dependencies {
 
     implementation("com.google.errorprone:error_prone_annotations:2.18.0")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+
+    implementation("com.airbnb.android:lottie:6.3.0")
 }

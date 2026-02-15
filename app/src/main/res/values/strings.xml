@@ -1,3 +1,26 @@
 <resources>
     <string name="app_name">My Grocery</string>
+    <string name="made_with_in_india">Made with ❤️ in India</string>
+    <string name="logout">Logout</string>
+    <string name="empty_text">Empty text</string>
+    <string name="welcome">Welcome</string>
+    <string name="good_morning">Good morning. </string>
+    <string name="prasanth_1">Prasanth</string>
+    <string name="filter">Filter</string>
+    <string name="no_internet">No Internet</string>
+    <string name="no_internet_connection">No Internet Connection</string>
+    <string name="check_your_mobile_data_or_wi_fi_and_try_again">Check your mobile data or Wi-Fi and try again.</string>
+    <string name="retry">Retry</string>
+    <string name="try_searching_for_something_else">Try searching for something else</string>
+    <string name="enable_notification">Enable Notification</string>
+    <string name="not_now">Not Now</string>
+    <string name="todo">TODO</string>
+    <string name="order_groceries_and_vegetables">Order Groceries And Vegetables</string>
+    <string name="mobile_no">Mobile No</string>
+    <string name="continue_">CONTINUE</string>
+    <string name="enter_otp">Enter OTP</string>
+    <string name="enter_6_digits_of_otp">Enter 6 digits of OTP</string>
+    <string name="verify">VERIFY</string>
+    <string name="resend_code">Resend code</string>
+    <string name="loading">Loading...</string>
 </resources>

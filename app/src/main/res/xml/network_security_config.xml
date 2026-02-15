@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Allow cleartext traffic for specific domains (development only) -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">test2.skyblue.co.in</domain>
+    </domain-config>
+
+    <!-- For production, use this instead -->
+    <!--
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    -->
+</network-security-config>

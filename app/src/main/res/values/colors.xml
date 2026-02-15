@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="primaryColor">#2B902F</color>
+    <color name="primaryDark">#09610D</color>
+    <color name="primaryLight">#75E97A</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="shadow_1">#d4d4d4</color>
+
+    <color name="menuBackgroundColor">#C70345</color>
+    <color name="lineGreyColor">#8E8D8D</color>
+    <color name="bottomNavigationIconColor">#08273E</color>
+    <color name="menuIconColor">#FFFFFF</color>
+    <color name="shimmer_grey">#E0E0E0</color>
+    <color name="shimmer_highlight">#F5F5F5</color>
 </resources>
