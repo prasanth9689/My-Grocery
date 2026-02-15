@@ -35,7 +35,6 @@ class ProductDetailActivity : AppCompatActivity() {
         supportPostponeEnterTransition()
 
         val product = intent.getParcelableExtra<Product>("product_data")
-        binding.detailImage.transitionName = "product_image"
 
         // Populate views
         product?.let { item ->
@@ -98,5 +97,24 @@ class ProductDetailActivity : AppCompatActivity() {
         }
 
         binding.btnBack.setOnClickListener { supportFinishAfterTransition() }
+
+        showFabWithAnimation()
+    }
+
+    private fun showFabWithAnimation() {
+        binding.fabAddToCart.apply {
+            visibility = View.VISIBLE
+            alpha = 0f
+            scaleX = 0f
+            scaleY = 0f
+
+            animate()
+                .alpha(1f)
+                .scaleX(1f)
+                .scaleY(1f)
+                .setDuration(400)
+                .setStartDelay(200) // Small delay looks more professional
+                .start()
+        }
     }
 }

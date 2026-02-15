@@ -264,6 +264,7 @@
             android:visibility="gone" />
 
         <View
+            android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="60dp" />
 
@@ -277,6 +278,7 @@
         android:background="@color/primaryDark"
         app:itemIconTint="@color/white"
         app:labelVisibilityMode="unlabeled"
+        android:visibility="gone"
         app:menu="@menu/menu" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

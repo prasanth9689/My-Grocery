@@ -20,6 +20,8 @@ class ProductViewModel @Inject constructor(
     private val repository: ProductRepository
 ) : ViewModel() {
 
+    // https://claude.ai/chat/e7579acb-06ae-42db-ab6a-2886875feeb2
+
     private val _res = MutableStateFlow<Resource<List<Product>>>(Resource.Loading)
     val res = _res.asStateFlow()
 
@@ -76,6 +78,19 @@ class ProductViewModel @Inject constructor(
                 quantity = 1 // Initial quantity
             )
             repository.insertCartItem(cartItem)
+        }
+    }
+
+    // Inside ProductViewModel.kt
+    fun searchProducts(query: String) {
+        if (query.isEmpty()) {
+            fetchProducts(isPagination = false) // Go back to default list if search is cleared
+            return
+        }
+
+        viewModelScope.launch {
+            _res.value = Resource.Loading2()
+            _res.value = repository.searchProducts(query)
         }
     }
 }

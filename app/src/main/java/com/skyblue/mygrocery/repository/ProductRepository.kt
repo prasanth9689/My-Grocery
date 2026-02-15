@@ -7,6 +7,7 @@ import com.skyblue.mygrocery.model.Product
 import retrofit2.Response
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.skyblue.mygrocery.utils.Resource
 
 @Singleton
 class ProductRepository @Inject constructor(
@@ -19,5 +20,18 @@ class ProductRepository @Inject constructor(
 
     suspend fun insertCartItem(cartItem: CartItem) {
         cartDao.insert(cartItem)
+    }
+
+    suspend fun searchProducts(query: String): Resource<List<Product>> {
+        return try {
+            val response = api.searchProducts(query)
+            if (response.results.isNotEmpty()) {
+                Resource.Success(response.results)
+            } else {
+                Resource.Error("No products found for '$query'")
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "An error occurred")
+        }
     }
 }
