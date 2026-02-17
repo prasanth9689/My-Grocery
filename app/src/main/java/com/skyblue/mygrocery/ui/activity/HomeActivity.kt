@@ -22,15 +22,19 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.skyblue.mygrocery.R
 import com.skyblue.mygrocery.databinding.ActivityHomeBinding
+import com.skyblue.mygrocery.databinding.LayoutAddLocationBinding
 import com.skyblue.mygrocery.model.Product
+import com.skyblue.mygrocery.model.UserLocation
 import com.skyblue.mygrocery.ui.adapter.ProductAdapter
 import com.skyblue.mygrocery.ui.viewmodel.CartViewModel
 import com.skyblue.mygrocery.ui.viewmodel.LocationState
 import com.skyblue.mygrocery.ui.viewmodel.LocationViewModel
 import com.skyblue.mygrocery.ui.viewmodel.ProductViewModel
 import com.skyblue.mygrocery.utils.Resource
+import com.skyblue.mygrocery.utils.SessionHandler
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -46,6 +50,9 @@ class HomeActivity : AppCompatActivity() {
     private val viewModelLocation: LocationViewModel by viewModels()
 
     private var searchJob: Job? = null
+
+    private var currentLat: Double = 0.0
+    private var currentLong: Double = 0.0
 
     private val productAdapter = ProductAdapter { product ->
         val intent = Intent(this, ProductDetailActivity::class.java).apply {
@@ -79,6 +86,7 @@ class HomeActivity : AppCompatActivity() {
         observeCart()
         observeLocationState()
         observeLocations()
+        observeActiveLocation()
 
         if (isLocationPermissionGranted()) {
             viewModelLocation.fetchCurrentLocation()
@@ -89,6 +97,11 @@ class HomeActivity : AppCompatActivity() {
 
         binding.toolbar.menu.setOnClickListener {
             binding.drawerLayout.openDrawer(GravityCompat.START)
+        }
+
+        binding.toolbar.locationLayout.setOnClickListener {
+            val intent = Intent(this, SavedAddressesActivity::class.java)
+            startActivity(intent)
         }
     }
 
@@ -250,6 +263,10 @@ class HomeActivity : AppCompatActivity() {
                         Toast.makeText(this@HomeActivity, "Fetching location...", Toast.LENGTH_SHORT).show()
                     }
                     is LocationState.Success -> {
+
+                        currentLat = state.location.latitude
+                        currentLong = state.location.longitude
+
                         Toast.makeText(
                             this@HomeActivity,
                             "Location: ${state.location.latitude}, ${state.location.longitude}",
@@ -263,6 +280,9 @@ class HomeActivity : AppCompatActivity() {
                         binding.toolbar.locationTxt.text = shortAddress
 
                         Log.d("Location", "Location short address $shortAddress")
+
+                        openLocationAddActivity(currentLat, currentLong, shortAddress)
+
                     }
                     is LocationState.Error -> {
                         Toast.makeText(this@HomeActivity, state.message, Toast.LENGTH_LONG).show()
@@ -270,6 +290,21 @@ class HomeActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun HomeActivity.openLocationAddActivity(
+        currentLat: Double,
+        currentLong: Double,
+        shortAddress: String
+    ) {
+        // 'this' now refers to HomeActivity, which is a Context
+        val intent = Intent(this, AddLocationActivity::class.java).apply {
+            putExtra("lat", currentLat)
+            putExtra("long", currentLong)
+            // Using the passed shortAddress or the binding value
+            putExtra("address", shortAddress)
+        }
+        startActivity(intent)
     }
 
     private fun observeLocations() {
@@ -345,5 +380,83 @@ class HomeActivity : AppCompatActivity() {
         ) == PackageManager.PERMISSION_GRANTED
 
         return fineLocation || coarseLocation
+    }
+
+    /*
+       HomeActivity Integration (The "Add Location" Button)
+       In your HomeActivity, when the user clicks to save the current address, you will create the object like this:
+     */
+
+    private fun showAddLocationBottomSheet() {
+        val bottomSheetBinding = LayoutAddLocationBinding.inflate(layoutInflater)
+        val dialog = BottomSheetDialog(this)
+        dialog.setContentView(bottomSheetBinding.root)
+
+        bottomSheetBinding.btnSaveAddress.setOnClickListener {
+            val currentUserId = SessionHandler.getUserId()
+
+            val newLocation = UserLocation(
+                userId = currentUserId,
+                latitude = currentLat,
+                longitude = currentLong,
+                address = binding.toolbar.locationTxt.text.toString(),
+                locationType = "Home",
+                receiverName = bottomSheetBinding.etName.text.toString(), // Access via bottomSheetBinding
+                receiverPhone = bottomSheetBinding.etPhone.text.toString(),
+                floorDetail = bottomSheetBinding.etFloor.text.toString(),
+                areaLandmark = bottomSheetBinding.etLandmark.text.toString(),
+                isSavedAddress = true
+            )
+            viewModelLocation.saveAddress(newLocation)
+            dialog.dismiss()
+        }
+        dialog.show()
+    }
+
+    /*
+      Now, instead of just showing raw coordinates,
+      you can observe this state to update your toolbar address text automatically.
+     */
+
+    private fun observeCurrentAddress() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModelLocation.currentSavedLocation.collect { location ->
+                    location?.let {
+                        // Update your toolbar with the saved address name or short address
+                        binding.toolbar.locationTxt.text = it.address ?: "Select Location"
+
+                        // If it's a Zepto style "Home" or "Work" label
+                        binding.toolbar.locationTxt.text = it.locationType
+                    }
+                }
+            }
+        }
+    }
+
+    private fun observeActiveLocation() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModelLocation.currentSavedLocation.collect { location ->
+                    location?.let {
+                        // Update Text
+                        binding.toolbar.locationTxt.text = it.locationType
+
+                        // Update Icon based on Type
+                        val iconRes = when (it.locationType) {
+                            "Home" -> R.drawable.ic_home_location
+                            "Work" -> R.drawable.ic_work_location
+                            else -> R.drawable.ic_other_location
+                        }
+                        binding.toolbar.imgLocationIcon.setImageResource(iconRes)
+                    }
+                }
+            }
+        }
+
+        // Open Saved Locations on click
+        binding.toolbar.locationLayout.setOnClickListener {
+            startActivity(Intent(this, SavedAddressesActivity::class.java))
+        }
     }
 }

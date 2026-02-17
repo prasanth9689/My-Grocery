@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.skyblue.mygrocery.model.UserLocation
 import com.skyblue.mygrocery.repository.LocationRepository
 import com.skyblue.mygrocery.utils.LocationManager
+import com.skyblue.mygrocery.utils.Resource
+import com.skyblue.mygrocery.utils.SessionHandler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,12 +21,18 @@ class LocationViewModel @Inject constructor(
     private val repository: LocationRepository,
     private val locationManager: LocationManager
 ) : ViewModel() {
-
+    val currentUserId = SessionHandler.getUserId()
     private val _locationState = MutableStateFlow<LocationState>(LocationState.Idle)
     val locationState: StateFlow<LocationState> = _locationState.asStateFlow()
 
     val allLocations: StateFlow<List<UserLocation>> = repository.allLocations
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val _saveState = MutableStateFlow<Resource<Unit>>(Resource.Loading) // Default or Idle
+    val saveState: StateFlow<Resource<Unit>> = _saveState
+
+    private val _updateState = MutableStateFlow<Resource<Unit>>(Resource.Idle)
+    val updateState: StateFlow<Resource<Unit>> = _updateState
 
     fun checkPermissionStatus(): Boolean {
         return locationManager.hasLocationPermission()
@@ -48,10 +56,17 @@ class LocationViewModel @Inject constructor(
                     ) ?: "Address not available"
 
                     val userLocation = UserLocation(
+                        userId = currentUserId, // Add this line
                         latitude = location.latitude,
                         longitude = location.longitude,
                         address = address,
-                        isCurrentLocation = true
+                        locationType = "Home", // Default type for auto-pings
+                        receiverName = "",     // Placeholder for new location
+                        receiverPhone = "",    // Placeholder
+                        floorDetail = "",      // Placeholder
+                        areaLandmark = "",     // Placeholder
+                        isCurrentLocation = true,
+                        isSavedAddress = false  // Since this is likely a GPS fetch, not a form save
                     )
 
                     repository.setCurrentLocation(userLocation)
@@ -65,6 +80,50 @@ class LocationViewModel @Inject constructor(
         }
     }
 
+    fun updateCurrentLocation(userLocation: UserLocation) {
+        viewModelScope.launch {
+            repository.setCurrentLocation(userLocation)
+        }
+    }
+
+    // Inside LocationViewModel.kt
+    val currentSavedLocation: StateFlow<UserLocation?> = repository.currentSavedLocation
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
+
+    fun saveAddress(location: UserLocation) {
+        viewModelScope.launch {
+            // Start loading
+            _saveState.value = Resource.Loading
+
+            // Use your merged repository logic
+            val result = repository.saveFullAddress(location)
+            _saveState.value = result
+        }
+    }
+
+    fun updateActiveAddress(location: UserLocation) {
+        viewModelScope.launch {
+            // We tell the repository to switch the 'isCurrentLocation' flag
+            repository.toggleActiveAddress(location.id)
+        }
+    }
+
+    fun deleteLocation(location: UserLocation) {
+        viewModelScope.launch {
+            repository.deleteLocation(location)
+        }
+    }
+
+    fun updateAddress(location: UserLocation) {
+        viewModelScope.launch {
+            _updateState.value = Resource.Loading
+            _updateState.value = repository.updateAddress(location)
+        }
+    }
 }
 
 sealed class LocationState {

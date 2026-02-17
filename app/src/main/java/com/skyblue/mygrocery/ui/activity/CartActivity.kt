@@ -7,16 +7,23 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.skyblue.mygrocery.R
 import com.skyblue.mygrocery.databinding.ActivityCartBinding
 import com.skyblue.mygrocery.ui.adapter.CartAdapter
 import com.skyblue.mygrocery.ui.viewmodel.CartViewModel
+import com.skyblue.mygrocery.ui.viewmodel.LocationViewModel
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class CartActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityCartBinding
     private val viewModel: CartViewModel by viewModels()
+    private val viewModelLocation: LocationViewModel by viewModels()
     private val cartAdapter by lazy {
         CartAdapter { item -> viewModel.removeItem(item) }
     }
@@ -69,6 +76,32 @@ class CartActivity : AppCompatActivity() {
                 val total = viewModel.calculateTotal(items)
                 binding.tvTotalPrice.text = String.format("$%.2f", total)
             }
+        }
+    }
+
+    private fun observeActiveLocation() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModelLocation.currentSavedLocation.collect { location ->
+                    location?.let {
+                        // Update Text
+                        binding.tvActiveLocationName.text = it.locationType
+
+                        // Update Icon based on Type
+                        val iconRes = when (it.locationType) {
+                            "Home" -> R.drawable.ic_home_location
+                            "Work" -> R.drawable.ic_work_location
+                            else -> R.drawable.ic_other_location
+                        }
+                        binding.imgLocationIcon.setImageResource(iconRes)
+                    }
+                }
+            }
+        }
+
+        // Open Saved Locations on click
+        binding.layoutActiveLocation.setOnClickListener {
+            startActivity(Intent(this, SavedAddressesActivity::class.java))
         }
     }
 }

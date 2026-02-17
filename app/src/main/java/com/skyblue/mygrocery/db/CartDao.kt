@@ -24,4 +24,16 @@ interface CartDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(cartItem: CartItem)
+
+    @Query("UPDATE user_locations SET isCurrentLocation = 0")
+    suspend fun clearActiveStatus()
+
+    @Query("UPDATE user_locations SET isCurrentLocation = 1 WHERE id = :targetId")
+    suspend fun setActiveStatus(targetId: Int)
+
+    @Transaction
+    suspend fun switchActiveAddress(targetId: Int) {
+        clearActiveStatus()
+        setActiveStatus(targetId)
+    }
 }

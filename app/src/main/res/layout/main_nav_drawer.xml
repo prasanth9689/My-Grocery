@@ -226,7 +226,7 @@
                     android:layout_marginStart="0dp"
                     android:fontFamily="sans-serif"
                     android:padding="12dp"
-                    android:text="@string/empty_text"
+                    android:text="My Saved Addresses"
                     android:textColor="@color/white" />
 
             </LinearLayout>

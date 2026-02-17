@@ -3,9 +3,9 @@ package com.skyblue.mygrocery.db
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.skyblue.mygrocery.model.Product    // Crucial Import
-import com.skyblue.mygrocery.model.CartItem   // Crucial Import
-import com.skyblue.mygrocery.model.UserLocation // Crucial Import
+import com.skyblue.mygrocery.model.Product
+import com.skyblue.mygrocery.model.CartItem
+import com.skyblue.mygrocery.model.UserLocation
 import com.skyblue.mygrocery.utils.Converters
 
 @Database(

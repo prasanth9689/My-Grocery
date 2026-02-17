@@ -13,4 +13,13 @@
     <color name="menuIconColor">#FFFFFF</color>
     <color name="shimmer_grey">#E0E0E0</color>
     <color name="shimmer_highlight">#F5F5F5</color>
+    <color name="light_blue">#E3F2FD</color>
+
+    <!-- Gray color -->
+    <color name="gray">#757575</color>
+
+    <!-- Additional gray variations (optional) -->
+    <color name="gray_light">#BDBDBD</color>
+    <color name="gray_dark">#424242</color>
+    <color name="gray_medium">#9E9E9E</color>
 </resources>

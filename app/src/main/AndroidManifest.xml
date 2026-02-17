@@ -20,6 +20,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyGrocery">
         <activity
+            android:name=".ui.activity.UpdateLocationActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.activity.SavedAddressesActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.activity.AddLocationActivity"
             android:exported="false" />
         <activity

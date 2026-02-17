@@ -25,13 +25,49 @@
             app:tint="@color/black" />
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
+            android:layout_weight="1"
             android:text="My Cart"
             android:textColor="@color/black"
             android:textSize="20sp"
             android:textStyle="bold" />
+
+        <LinearLayout
+            android:id="@+id/layoutActiveLocation"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:background="?attr/selectableItemBackground">
+
+            <ImageView
+                android:id="@+id/imgLocationIcon"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_location"
+                app:tint="@color/primaryDark" />
+
+            <TextView
+                android:id="@+id/tvActiveLocationName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="4dp"
+                android:text="Home"
+                android:textColor="@color/primaryDark"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <ImageView
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:src="@drawable/ic_arrow_down"
+                app:tint="@color/gray" />
+        </LinearLayout>
+
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
