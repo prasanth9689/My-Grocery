@@ -91,25 +91,24 @@ class SavedAddressesActivity : AppCompatActivity() {
                 val position = viewHolder.adapterPosition
                 val locationToDelete = addressAdapter.currentList[position]
 
-                // Step 1: Remove from list visually
-                val currentList = addressAdapter.currentList.toMutableList()
-                currentList.removeAt(position)
-                addressAdapter.submitList(currentList)
+                // Prevent deleting the currently active address
+                if (locationToDelete.isCurrentLocation) {
+                    addressAdapter.notifyItemChanged(position)
+                    Toast.makeText(this@SavedAddressesActivity, "Cannot delete active address", Toast.LENGTH_SHORT).show()
+                    return
+                }
 
-                // Step 2: Show Snackbar with Undo
-                Snackbar.make(binding.rvSavedAddresses, "Address deleted", Snackbar.LENGTH_LONG)
-                    .setAction("Undo") {
-                        // If user clicks Undo, put it back
-                        addressAdapter.submitList(addressAdapter.currentList)
+                // Show Confirmation Dialog
+                MaterialAlertDialogBuilder(this@SavedAddressesActivity)
+                    .setTitle("Delete Address?")
+                    .setMessage("Are you sure you want to remove this address?")
+                    .setNegativeButton("Cancel") { _, _ ->
+                        addressAdapter.notifyItemChanged(position) // Put it back
                     }
-                    .addCallback(object : Snackbar.Callback() {
-                        override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
-                            if (event != DISMISS_EVENT_ACTION) {
-                                // User did NOT click undo, now delete from DB and Server
-                                viewModel.deleteLocation(locationToDelete)
-                            }
-                        }
-                    })
+                    .setPositiveButton("Delete") { _, _ ->
+                        viewModel.deleteAddress(locationToDelete)
+                        Toast.makeText(this@SavedAddressesActivity, "Address removed", Toast.LENGTH_SHORT).show()
+                    }
                     .show()
             }
         }

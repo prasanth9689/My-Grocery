@@ -124,6 +124,12 @@ class LocationViewModel @Inject constructor(
             _updateState.value = repository.updateAddress(location)
         }
     }
+
+    fun deleteAddress(location: UserLocation) {
+        viewModelScope.launch {
+            repository.deleteAddress(location)
+        }
+    }
 }
 
 sealed class LocationState {

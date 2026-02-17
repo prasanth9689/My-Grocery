@@ -11,6 +11,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.gson.Gson
 import com.skyblue.mygrocery.R
 import com.skyblue.mygrocery.databinding.ActivityCartBinding
 import com.skyblue.mygrocery.ui.adapter.CartAdapter
@@ -24,6 +25,7 @@ class CartActivity : AppCompatActivity() {
     private lateinit var binding: ActivityCartBinding
     private val viewModel: CartViewModel by viewModels()
     private val viewModelLocation: LocationViewModel by viewModels()
+
     private val cartAdapter by lazy {
         CartAdapter { item -> viewModel.removeItem(item) }
     }
@@ -35,19 +37,26 @@ class CartActivity : AppCompatActivity() {
 
         setupRecyclerView()
         observeCart()
+        observeActiveLocation() // Added this back as it was missing from your onCreate
 
         binding.btnBack.setOnClickListener { finish() }
 
-        // Inside CartActivity.kt
         binding.btnCheckout.setOnClickListener {
-            if (cartAdapter.currentList.isNotEmpty()) {
-                // 1. Clear the Room Database
-                viewModel.clearAll()
+            val currentItems = cartAdapter.currentList
+            if (currentItems.isNotEmpty()) {
+                // 1. Convert List to JSON String using GSON
+                val gson = Gson()
+                val cartJson = gson.toJson(currentItems)
 
-                // 2. Navigate to Success Screen
-                val intent = Intent(this, SuccessActivity::class.java)
+                // 2. Calculate subtotal
+                val subtotal = viewModel.calculateTotal(currentItems)
+
+                // 3. Navigate to PlaceOrderActivity (NOT SuccessActivity yet)
+                val intent = Intent(this, PlaceOrderActivity::class.java).apply {
+                    putExtra("cart_json", cartJson)
+                    putExtra("subtotal", subtotal)
+                }
                 startActivity(intent)
-                finish() // Close cart so they can't go back to an empty list
             } else {
                 Toast.makeText(this, "Your cart is empty!", Toast.LENGTH_SHORT).show()
             }
@@ -65,16 +74,19 @@ class CartActivity : AppCompatActivity() {
         viewModel.cartItems.observe(this) { items ->
             if (items.isNullOrEmpty()) {
                 binding.rvCart.visibility = View.GONE
-                binding.layoutEmptyCart.root.visibility = View.VISIBLE // You can reuse your empty state layout here
-                binding.tvTotalPrice.text = "$0.00"
+                binding.layoutEmptyCart.root.visibility = View.VISIBLE
+                binding.tvTotalPrice.text = "₹0.00"
+                binding.btnCheckout.isEnabled = false // Disable checkout if empty
+                binding.btnCheckout.alpha = 0.5f
             } else {
                 binding.rvCart.visibility = View.VISIBLE
                 binding.layoutEmptyCart.root.visibility = View.GONE
+                binding.btnCheckout.isEnabled = true
+                binding.btnCheckout.alpha = 1.0f
                 cartAdapter.submitList(items)
 
-                // Update total price
                 val total = viewModel.calculateTotal(items)
-                binding.tvTotalPrice.text = String.format("$%.2f", total)
+                binding.tvTotalPrice.text = String.format("₹%.2f", total)
             }
         }
     }
@@ -84,10 +96,7 @@ class CartActivity : AppCompatActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModelLocation.currentSavedLocation.collect { location ->
                     location?.let {
-                        // Update Text
                         binding.tvActiveLocationName.text = it.locationType
-
-                        // Update Icon based on Type
                         val iconRes = when (it.locationType) {
                             "Home" -> R.drawable.ic_home_location
                             "Work" -> R.drawable.ic_work_location
@@ -99,7 +108,6 @@ class CartActivity : AppCompatActivity() {
             }
         }
 
-        // Open Saved Locations on click
         binding.layoutActiveLocation.setOnClickListener {
             startActivity(Intent(this, SavedAddressesActivity::class.java))
         }

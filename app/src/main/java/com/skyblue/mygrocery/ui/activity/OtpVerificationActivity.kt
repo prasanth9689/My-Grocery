@@ -2,155 +2,146 @@ package com.skyblue.mygrocery.ui.activity
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.CountDownTimer
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.KeyEvent
+import android.view.View
 import android.widget.EditText
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import com.skyblue.mygrocery.R
-import com.google.android.gms.auth.api.phone.SmsRetriever
-import com.google.android.gms.tasks.Task
-import com.google.firebase.FirebaseException
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.PhoneAuthCredential
-import com.google.firebase.auth.PhoneAuthOptions
-import com.google.firebase.auth.PhoneAuthProvider
-import java.util.concurrent.TimeUnit
 import com.skyblue.mygrocery.databinding.ActivityOtpVerificationBinding
-import com.skyblue.mygrocery.utils.OtpHelper
+import com.skyblue.mygrocery.ui.AuthViewModel
+import com.skyblue.mygrocery.utils.Resource
+import com.skyblue.mygrocery.utils.SessionHandler
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
-
+@AndroidEntryPoint
 class OtpVerificationActivity : AppCompatActivity() {
+
     private lateinit var binding: ActivityOtpVerificationBinding
-    private lateinit var auth: FirebaseAuth
+    private val viewModel: AuthViewModel by viewModels()
     private var verificationId: String? = null
-
-    private lateinit var otpHelper: OtpHelper
-    private lateinit var etList: List<EditText>
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         binding = ActivityOtpVerificationBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
+        // Get data from Intent
+        verificationId = intent.getStringExtra("verificationId")
+        val phone = intent.getStringExtra("phoneNumber")
+        binding.tvOtpSubHeader.text = "OTP sent to +91 $phone"
 
-        auth = FirebaseAuth.getInstance()
+        viewModel.setVerificationId(verificationId ?: "")
 
-        verificationId = intent.getStringExtra("verification_id")
+        setupOtpInputLogic()
+        startResendTimer()
+        observeAuthState()
 
-        etList = listOf(
-            findViewById(R.id.et_otp_1),
-            findViewById(R.id.et_otp_2),
-            findViewById(R.id.et_otp_3),
-            findViewById(R.id.et_otp_4),
-            findViewById(R.id.et_otp_5),
-            findViewById(R.id.et_otp_6)
-        )
-
-        otpHelper = OtpHelper(this, etList) { code ->
-            // OTP completed automatically by user typing or paste
-            // You may auto-click verify or just enable verify button
-            verifyCode(code)
-        }
-
-        binding.verify.setOnClickListener {
-            val code = etList.joinToString("") { it.text.toString().trim() }
-            if (code.length == 6) verifyCode(code) else Toast.makeText(this, "Enter 6 digit code", Toast.LENGTH_SHORT).show()
-        }
-
-        binding.tvResend.setOnClickListener {
-            // Trigger resend via Firebase (call sendVerificationCode again)
-            val phone = intent.getStringExtra("phone")
-            phone?.let { startPhoneNumberVerification(it) }
-        }
-
-
-
-        // Start SMS Retriever to boost auto-fill success (no SMS permission required)
-        startSmsRetriever()
-    }
-
-    private fun startPhoneNumberVerification(phoneNumber: String) {
-        val options = PhoneAuthOptions.newBuilder(auth)
-            .setPhoneNumber(phoneNumber)
-            .setTimeout(60L, TimeUnit.SECONDS)
-            .setActivity(this)
-            .setCallbacks(callbacks)
-            .build()
-        PhoneAuthProvider.verifyPhoneNumber(options)
-    }
-
-    private val callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
-        override fun onVerificationCompleted(credential: PhoneAuthCredential) {
-            // Auto-retrieved — might contain SMS code or directly be credential
-            val smsCode = credential.smsCode
-            if (!smsCode.isNullOrEmpty()) {
-                // fill UI
-                runOnUiThread {
-                    otpHelper.handlePaste(smsCode) // note: handlePaste is private in helper; change to public if needed
-                }
-                // optionally sign in immediately
-                signInWithPhoneAuthCredential(credential)
+        binding.btnVerify.setOnClickListener {
+            val otp = getOtpFromInputs()
+            if (otp.length == 6) {
+                viewModel.verifyOtp(otp)
             } else {
-                // Sometimes credential has no smsCode but can sign in directly
-                signInWithPhoneAuthCredential(credential)
+                Toast.makeText(this, "Please enter 6-digit OTP", Toast.LENGTH_SHORT).show()
             }
         }
 
-        override fun onVerificationFailed(e: FirebaseException) {
-            Toast.makeText(this@OtpVerificationActivity, "Verification failed: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
-        }
+        binding.btnBack.setOnClickListener { finish() }
+    }
 
-        override fun onCodeSent(verificationId: String, token: PhoneAuthProvider.ForceResendingToken) {
-            this@OtpVerificationActivity.verificationId = verificationId
-            Toast.makeText(this@OtpVerificationActivity, "Code sent", Toast.LENGTH_SHORT).show()
+    private fun setupOtpInputLogic() {
+        val inputs = arrayOf(binding.etOtp1, binding.etOtp2, binding.etOtp3, binding.etOtp4, binding.etOtp5, binding.etOtp6)
+
+        for (i in inputs.indices) {
+            inputs[i].addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+                override fun afterTextChanged(s: Editable?) {
+                    if (s?.length == 1 && i < inputs.size - 1) {
+                        inputs[i + 1].requestFocus()
+                    }
+                }
+            })
+
+            inputs[i].setOnKeyListener { _, keyCode, event ->
+                if (keyCode == KeyEvent.KEYCODE_DEL && event.action == KeyEvent.ACTION_DOWN) {
+                    if (inputs[i].text.isEmpty() && i > 0) {
+                        inputs[i - 1].requestFocus()
+                    }
+                }
+                false
+            }
         }
     }
 
-    private fun verifyCode(code: String) {
-        val id = verificationId
-        if (id == null) {
-            Toast.makeText(this, "Verification id is null. Try resend.", Toast.LENGTH_SHORT).show()
-            return
-        }
-        val credential = PhoneAuthProvider.getCredential(id, code)
-        signInWithPhoneAuthCredential(credential)
+    private fun getOtpFromInputs(): String {
+        return binding.etOtp1.text.toString() +
+                binding.etOtp2.text.toString() +
+                binding.etOtp3.text.toString() +
+                binding.etOtp4.text.toString() +
+                binding.etOtp5.text.toString() +
+                binding.etOtp6.text.toString()
     }
 
-    private fun signInWithPhoneAuthCredential(credential: PhoneAuthCredential) {
-        auth.signInWithCredential(credential)
-            .addOnCompleteListener(this) { task ->
-                if (task.isSuccessful) {
-                    // success — user signed in
-                    Toast.makeText(this, "Authenticated!", Toast.LENGTH_SHORT).show()
-                    val intent = Intent(this, EnableNotificationActivity::class.java)
-                    startActivity(intent)
-                    // proceed to next screen
-                } else {
-                    Toast.makeText(this, "Invalid code or error: ${task.exception?.localizedMessage}", Toast.LENGTH_LONG).show()
+    private fun startResendTimer() {
+        object : CountDownTimer(60000, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                binding.tvTimer.text = "Resend code in 00:${millisUntilFinished / 1000}"
+            }
+            override fun onFinish() {
+                binding.tvTimer.text = "Resend OTP"
+                binding.tvTimer.setTextColor(resources.getColor(R.color.action_blue, null))
+                binding.tvTimer.setOnClickListener {
+                    // Trigger resend logic here
                 }
             }
+        }.start()
     }
 
-    // --- SMS Retriever API (optional) ---
-    private fun startSmsRetriever() {
-        val client = SmsRetriever.getClient(this)
-        val task: Task<Void> = client.startSmsRetriever()
-        task.addOnSuccessListener {
-            // Successfully started retriever, waits for broadcast with SMS.
-            // You need to register a BroadcastReceiver listening for com.google.android.gms.auth.api.phone.SMS_RETRIEVED
-            // In onActivityResult or receiver, extract SMS and parse code.
+    private fun observeAuthState() {
+        lifecycleScope.launch {
+            viewModel.authState.collect { state ->
+                if (state is Resource.Success) {
+                    val uid = state.data
+                    // Step 1: Login locally
+                    SessionHandler.loginUser(uid)
+                    // Step 2: Check server for existing profile
+                    viewModel.checkUserRegistration(uid)
+                }
+            }
         }
-        task.addOnFailureListener {
-            // failed to start
+
+        lifecycleScope.launch {
+            viewModel.syncState.collect { state ->
+                when (state) {
+                    is Resource.Loading -> {
+                        binding.btnVerify.isEnabled = false
+                        // Show loading indicator
+                    }
+                    is Resource.Success -> {
+                        // User exists! Sync data and go to Home
+                        val userName = state.data.name ?: ""
+                        val userEmail = state.data.email ?: ""
+
+                        SessionHandler.updateUserProfile(userName, userEmail)
+                        val intent = Intent(this@OtpVerificationActivity, NotificationPermissionActivity::class.java)
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        startActivity(intent)
+                    }
+                    is Resource.Error -> {
+                        binding.btnVerify.isEnabled = true
+                        val intent = Intent(this@OtpVerificationActivity, ProfileSetupActivity::class.java)
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        startActivity(intent)                    }
+                    else -> {}
+                }
+            }
         }
     }
 }

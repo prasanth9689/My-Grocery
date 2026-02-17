@@ -10,7 +10,10 @@ object SessionHandler {
     private const val MODE = Context.MODE_PRIVATE
     private var EMAIL_KEY = "email"
     private var PWD_KEY = "pwd"
-    private var USER_ID_KEY = "user_id"
+    private var KEY_USER_ID = "user_id"
+    private const val KEY_USER_NAME = "user_name"
+    private const val KEY_USER_EMAIL = "user_email"
+    private const val KEY_IS_LOGGED_IN = "is_logged_in"
     private const val KEY_EXPIRES = "expires"
     private const val KEY_EMPTY = ""
 
@@ -20,22 +23,33 @@ object SessionHandler {
         sharedPreferences = context.getSharedPreferences(PREFS_KEY, MODE)
     }
 
-    // TODO step 1: call `AppPreferences.setup(applicationContext)` in your MainActivity's `onCreate` method
-    // TODO step 2: set your app name here
-    fun loginUser(userId: String, email: String, password: String){
-        val editer : SharedPreferences.Editor = sharedPreferences.edit()
-        editer.putString(USER_ID_KEY, userId) // Save ID
-        editer.putString(EMAIL_KEY, email)
-        editer.putString(PWD_KEY, password)
-
-        val date = Date()
-        val millis = date.time + 7 * 24 * 60 * 60 * 1000
-        editer.putLong(KEY_EXPIRES, millis)
-        editer.apply()
+    fun loginUser(userId: String) {
+        sharedPreferences.edit().apply {
+            putString(KEY_USER_ID, userId)
+            putBoolean(KEY_IS_LOGGED_IN, true)
+            apply()
+        }
     }
 
     fun getUserId(): String {
-        return sharedPreferences.getString(USER_ID_KEY, KEY_EMPTY) ?: KEY_EMPTY
+        return sharedPreferences.getString(KEY_USER_ID, KEY_EMPTY) ?: KEY_EMPTY
+    }
+
+    fun getUserName(): String = sharedPreferences.getString(KEY_USER_NAME, "Guest") ?: "Guest"
+    fun getUserEmail(): String = sharedPreferences.getString(KEY_USER_EMAIL, "") ?: ""
+
+    fun updateUserProfile(name: String, email: String) {
+        sharedPreferences.edit().apply {
+            putString(KEY_USER_NAME, name)
+            putString(KEY_USER_EMAIL, email)
+            apply()
+        }
+    }
+
+    fun isLoggedIn(): Boolean = sharedPreferences.getBoolean(KEY_IS_LOGGED_IN, false)
+
+    fun logoutUser() {
+        sharedPreferences.edit().clear().apply()
     }
 
     /**
@@ -47,7 +61,8 @@ object SessionHandler {
         if (!isLoggedIn()) return null
 
         val user = User()
-        user.userId = sharedPreferences.getString(USER_ID_KEY, KEY_EMPTY) // Ensure User model has id
+        user.userId =
+            sharedPreferences.getString(KEY_USER_ID, KEY_EMPTY) // Ensure User model has id
         user.email = sharedPreferences.getString(EMAIL_KEY, KEY_EMPTY)
         user.password = sharedPreferences.getString(PWD_KEY, KEY_EMPTY)
         user.sessionExpiryDate = Date(sharedPreferences.getLong(KEY_EXPIRES, 0))
@@ -55,34 +70,4 @@ object SessionHandler {
         return user
     }
 
-
-    /**
-     * Logs out user by clearing the session
-     */
-    fun logoutUser() {
-        val editer : SharedPreferences.Editor = sharedPreferences.edit()
-        editer.clear()
-        editer.commit()
-    }
-
-    /**
-     * Checks whether user is logged in
-     *
-     * @return
-     */
-    fun isLoggedIn(): Boolean {
-        val currentDate = Date()
-        val millis: Long = sharedPreferences.getLong(KEY_EXPIRES, 0)
-
-        /* If shared preferences does not have a value
-         then user is not logged in
-         */if (millis == 0L) {
-            return false
-        }
-        val expiryDate = Date(millis)
-
-        /* Check if session is expired by comparing
-        current date and Session expiry date
-        */return currentDate.before(expiryDate)
-    }
 }

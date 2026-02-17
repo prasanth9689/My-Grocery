@@ -2,6 +2,8 @@ package com.skyblue.mygrocery.di
 
 import com.skyblue.mygrocery.api.ApiService
 import com.skyblue.mygrocery.db.CartDao
+import com.skyblue.mygrocery.repository.AuthRepository
+import com.skyblue.mygrocery.repository.OrderRepository
 import com.skyblue.mygrocery.repository.ProductRepository
 import dagger.Module
 import dagger.Provides
@@ -56,5 +58,21 @@ object NetworkModule {
         cartDao: CartDao
     ): ProductRepository {
         return ProductRepository(api, cartDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuthRepository(api: ApiService): AuthRepository {
+        return AuthRepository(api)
+    }
+
+    @Provides
+    @Singleton
+    fun provideOrderRepository(
+        api: ApiService,
+        cartDao: CartDao // Add this parameter
+    ): OrderRepository {
+        // Pass both to the constructor
+        return OrderRepository(api, cartDao)
     }
 }

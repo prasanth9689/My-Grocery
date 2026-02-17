@@ -1,9 +1,12 @@
 package com.skyblue.mygrocery.api
 
+import com.skyblue.mygrocery.model.OrderRequest
+import com.skyblue.mygrocery.model.OrderResponse
 import com.skyblue.mygrocery.model.Product
 import com.skyblue.mygrocery.model.ProductResponse
 import com.skyblue.mygrocery.model.SimpleResponse
 import com.skyblue.mygrocery.model.UserLocation
+import com.skyblue.mygrocery.model.UserProfileResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -41,4 +44,19 @@ interface ApiService {
         @Path("id") addressId: Int,
         @Body location: UserLocation
     ): Response<SimpleResponse>
+
+    @DELETE("api/address/delete/{id}")
+    suspend fun deleteAddress(
+        @Path("id") addressId: Int
+    ): Response<SimpleResponse>
+
+    @GET("api/user/profile/{uid}")
+    suspend fun getUserProfile(
+        @Path("uid") firebaseUid: String
+    ): Response<UserProfileResponse>
+
+    @POST("api/orders/place")
+    suspend fun placeOrder(
+        @Body orderRequest: OrderRequest
+    ): Response<OrderResponse>
 }

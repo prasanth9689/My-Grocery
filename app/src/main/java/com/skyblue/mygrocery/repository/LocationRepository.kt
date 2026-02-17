@@ -86,4 +86,18 @@ class LocationRepository @Inject constructor(
             Resource.Error("Local update saved. Sync pending.")
         }
     }
+
+    suspend fun deleteAddress(location: UserLocation): Resource<Unit> {
+        return try {
+            // 1. Delete from Local Room
+            locationDao.deleteLocation(location)
+
+            // 2. Delete from Server
+            val response = api.deleteAddress(location.id)
+            if (response.isSuccessful) Resource.Success(Unit)
+            else Resource.Error("Deleted locally, but server sync failed.")
+        } catch (e: Exception) {
+            Resource.Error("Offline: Address removed from device only.")
+        }
+    }
 }
