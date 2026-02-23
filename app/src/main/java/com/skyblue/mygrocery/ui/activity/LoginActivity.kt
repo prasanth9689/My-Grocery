@@ -10,14 +10,14 @@ import android.text.style.ClickableSpan
 import android.text.style.ForegroundColorSpan
 import android.view.View
 import android.widget.Toast
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseException
+import com.google.firebase.FirebaseOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
 import com.skyblue.mygrocery.databinding.ActivityLoginBinding
-import com.skyblue.mygrocery.ui.AuthViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.concurrent.TimeUnit
 
@@ -25,15 +25,23 @@ import java.util.concurrent.TimeUnit
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
-    private val viewModel: AuthViewModel by viewModels()
-    private lateinit var auth: FirebaseAuth
+
+    private val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        auth = FirebaseAuth.getInstance()
+//        val options = FirebaseOptions.Builder()
+//            .setApplicationId("1:515942337063:android:6c065863c3142e9aa39c02") // Found in google-services.json as mobilesdk_app_id
+//            .setApiKey("AIzaSyDYBJCOvX71so8SqTkDTzV11c2n7UqKKOk")       // Found in google-services.json as current_key
+//            .setProjectId("my-grocery-71445") // Found in google-services.json as project_id
+//            .build()
+//
+//        if (FirebaseApp.getApps(this).isEmpty()) {
+//            FirebaseApp.initializeApp(this)
+//        }
 
         setupPrivacyPolicyText()
 
@@ -94,11 +102,9 @@ class LoginActivity : AppCompatActivity() {
             }
         }
 
-        // Color and Click for "Terms of Service" (Index 32 to 48)
         spannableString.setSpan(privacyClickable, 32, 48, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         spannableString.setSpan(ForegroundColorSpan(Color.BLUE), 32, 48, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
-        // Color and Click for "Privacy Policy" (Index 53 to 67)
         spannableString.setSpan(privacyClickable, 53, 67, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         spannableString.setSpan(ForegroundColorSpan(Color.BLUE), 53, 67, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 

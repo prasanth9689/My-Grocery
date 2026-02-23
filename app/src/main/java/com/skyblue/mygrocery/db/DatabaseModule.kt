@@ -10,7 +10,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import jakarta.inject.Singleton
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -51,6 +51,6 @@ object DatabaseModule {
 
     @Provides
     fun provideCartDao(database: AppDatabase): CartDao {
-        return database.cartDao() // This tells Hilt how to get the Dao
+        return database.cartDao()
     }
 }

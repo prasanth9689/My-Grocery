@@ -3,11 +3,8 @@ package com.skyblue.mygrocery.ui.activity
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.skyblue.mygrocery.R
 import com.skyblue.mygrocery.databinding.ActivityUpdateLocationBinding
@@ -28,7 +25,6 @@ class UpdateLocationActivity : AppCompatActivity() {
         binding = ActivityUpdateLocationBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Get the object passed from the List screen
         val location = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             intent.getParcelableExtra("location_data", UserLocation::class.java)
         } else {

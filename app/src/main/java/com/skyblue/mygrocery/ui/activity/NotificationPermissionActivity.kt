@@ -13,6 +13,7 @@ import com.skyblue.mygrocery.databinding.ActivityNotificationPermissionBinding
 class NotificationPermissionActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityNotificationPermissionBinding
+    var notification_activity: Boolean? = null
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -26,6 +27,8 @@ class NotificationPermissionActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityNotificationPermissionBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        notification_activity = intent.getBooleanExtra("notification_activity", false)
 
         binding.btnEnable.setOnClickListener {
             askForNotificationPermission()
@@ -52,7 +55,13 @@ class NotificationPermissionActivity : AppCompatActivity() {
     }
 
     private fun startMainActivity() {
-        val intent = Intent(this, HomeActivity::class.java)
+        // Declare the intent variable first
+        val intent = if (notification_activity == true) {
+            Intent(this, ProfileSetupActivity::class.java)
+        } else {
+            Intent(this, HomeActivity::class.java)
+        }
+
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()

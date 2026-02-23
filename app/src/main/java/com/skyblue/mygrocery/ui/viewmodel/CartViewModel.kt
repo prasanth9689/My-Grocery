@@ -7,8 +7,9 @@ import com.skyblue.mygrocery.db.CartDao
 import com.skyblue.mygrocery.model.CartItem
 import com.skyblue.mygrocery.repository.CartRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import jakarta.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
 class CartViewModel @Inject constructor(

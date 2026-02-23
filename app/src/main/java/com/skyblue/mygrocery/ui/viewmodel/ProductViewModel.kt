@@ -9,11 +9,11 @@ import com.skyblue.mygrocery.model.Product
 import com.skyblue.mygrocery.repository.ProductRepository
 import com.skyblue.mygrocery.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
-import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
 class ProductViewModel @Inject constructor(
@@ -89,7 +89,7 @@ class ProductViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            _res.value = Resource.Loading2()
+            _res.value = Resource.Loading
             _res.value = repository.searchProducts(query)
         }
     }

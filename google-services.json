@@ -12,7 +12,16 @@
           "package_name": "com.skyblue.mygrocery"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "515942337063-7t5us0esg65qsei7pqe78ce8rrb0i6vh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.skyblue.mygrocery",
+            "certificate_hash": "24d9186fdc65a036f951adf9699951be4c8587a9"
+          }
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDYBJCOvX71so8SqTkDTzV11c2n7UqKKOk"

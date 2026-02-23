@@ -4,13 +4,16 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.skyblue.mygrocery.model.User
 import java.util.*
+import androidx.core.content.edit
 
 object SessionHandler {
     private var PREFS_KEY = "prefs"
     private const val MODE = Context.MODE_PRIVATE
     private var EMAIL_KEY = "email"
     private var PWD_KEY = "pwd"
+    private var KEY_USER_UID = "user_uid"
     private var KEY_USER_ID = "user_id"
+    private const val KEY_PHONE = "user_phone"
     private const val KEY_USER_NAME = "user_name"
     private const val KEY_USER_EMAIL = "user_email"
     private const val KEY_IS_LOGGED_IN = "is_logged_in"
@@ -23,9 +26,24 @@ object SessionHandler {
         sharedPreferences = context.getSharedPreferences(PREFS_KEY, MODE)
     }
 
-    fun loginUser(userId: String) {
+    fun savePhoneNumberAndUserId(phone: String, userId: String) {
+        // This extension automatically calls .apply() at the end of the block
+            sharedPreferences.edit(commit = false) {
+            putString(KEY_PHONE, phone)
+                putString(KEY_USER_ID, userId)
+        }
+    }
+
+    // You will need this to retrieve it in ProfileSetupActivity
+    fun getPhoneNumber(): String? {
+        return sharedPreferences.getString(KEY_PHONE, null)
+    }
+
+    fun loginUser(userId: String, phone: String, email: String) {
         sharedPreferences.edit().apply {
             putString(KEY_USER_ID, userId)
+            putString(KEY_PHONE, phone)
+            putString(EMAIL_KEY, email)
             putBoolean(KEY_IS_LOGGED_IN, true)
             apply()
         }

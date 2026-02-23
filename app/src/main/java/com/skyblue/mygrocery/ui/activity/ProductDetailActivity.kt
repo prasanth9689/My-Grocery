@@ -6,8 +6,8 @@ import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import android.transition.Transition
-import android.transition.TransitionListenerAdapter
+import androidx.transition.Transition
+import androidx.transition.TransitionListenerAdapter
 import androidx.annotation.RequiresApi
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
@@ -45,46 +45,33 @@ class ProductDetailActivity : AppCompatActivity() {
             Glide.with(this)
                 .load(item.image)
                 .addListener(object : RequestListener<Drawable> {
-                    // Leave this empty and use the IDE's auto-fix
                     override fun onLoadFailed(
                         e: GlideException?,
                         model: Any?,
-                        target: Target<Drawable?>,
+                        target: Target<Drawable>,
                         isFirstResource: Boolean
                     ): Boolean {
-                        TODO("Not yet implemented")
+                        supportStartPostponedEnterTransition() // Start transition even if image fails
+                        return false // Allow Glide to show error drawable if you have one
                     }
 
                     override fun onResourceReady(
                         resource: Drawable,
                         model: Any,
-                        target: Target<Drawable?>?,
+                        target: Target<Drawable>,
                         dataSource: DataSource,
                         isFirstResource: Boolean
                     ): Boolean {
-                        TODO("Not yet implemented")
+                        supportStartPostponedEnterTransition() // Start transition when image is ready
+                        return false // Let Glide handle setting the resource to the ImageView
                     }
                 })
+                .into(binding.detailImage) // Don't forget to call .into()
         }
 
-        // FAB Animation
-        window.sharedElementEnterTransition.addListener(@RequiresApi(Build.VERSION_CODES.O)
-        object : TransitionListenerAdapter() {
-            override fun onTransitionEnd(transition: Transition) {
-                binding.fabAddToCart.visibility = View.VISIBLE
-                binding.fabAddToCart.alpha = 0f
-                binding.fabAddToCart.scaleX = 0f
-                binding.fabAddToCart.scaleY = 0f
-                binding.fabAddToCart.animate()
-                    .alpha(1f).scaleX(1f).scaleY(1f)
-                    .setDuration(300)
-                    .start()
-            }
-            override fun onTransitionStart(transition: Transition) {}
-            override fun onTransitionCancel(transition: Transition) {}
-            override fun onTransitionPause(transition: Transition) {}
-            override fun onTransitionResume(transition: Transition) {}
-        })
+        // 4. Handle FAB Animation with Version Safety
+        setupFabAnimation()
+
 
         // Add to Cart Logic (Room Database)
         binding.fabAddToCart.setOnClickListener {
@@ -97,8 +84,20 @@ class ProductDetailActivity : AppCompatActivity() {
         }
 
         binding.btnBack.setOnClickListener { supportFinishAfterTransition() }
+    }
 
-        showFabWithAnimation()
+    private fun setupFabAnimation() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // Use framework Transition classes for Window transitions
+            window.sharedElementEnterTransition.addListener(object : android.transition.TransitionListenerAdapter() {
+                override fun onTransitionEnd(transition: android.transition.Transition) {
+                    showFabWithAnimation()
+                }
+            })
+        } else {
+            // Fallback: Just show it immediately on API < 26
+            binding.fabAddToCart.visibility = View.VISIBLE
+        }
     }
 
     private fun showFabWithAnimation() {

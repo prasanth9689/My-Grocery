@@ -1,15 +1,23 @@
 package com.skyblue.mygrocery.api
 
+import com.skyblue.mygrocery.model.OrderHistoryResponse
 import com.skyblue.mygrocery.model.OrderRequest
 import com.skyblue.mygrocery.model.OrderResponse
 import com.skyblue.mygrocery.model.Product
 import com.skyblue.mygrocery.model.ProductResponse
+import com.skyblue.mygrocery.model.ProfileRequest
+import com.skyblue.mygrocery.model.ProfileResponse
+import com.skyblue.mygrocery.model.RatingRequest
 import com.skyblue.mygrocery.model.SimpleResponse
 import com.skyblue.mygrocery.model.UserLocation
 import com.skyblue.mygrocery.model.UserProfileResponse
+import com.skyblue.mygrocery.model.UserStatusResponse
+import com.skyblue.mygrocery.model.VerifyUserRequest
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
+import retrofit2.http.Field
+import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -27,6 +35,14 @@ interface ApiService {
         @Query("q") query: String
     ): ProductResponse
 
+    @POST("api/profile")
+    suspend fun updateProfile(@Body request: ProfileRequest): Response<ProfileResponse>
+
+    @POST("api/verify_user") // Ensure this matches your server path
+    suspend fun verifyUser(
+        @Body request: VerifyUserRequest
+    ): Response<UserStatusResponse>
+
     @POST("api/user/save-address")
     suspend fun uploadLocation(@Body location: UserLocation): Response<Unit>
 
@@ -36,7 +52,6 @@ interface ApiService {
     @POST("/api/addresses")
     suspend fun uploadUserAddress(
         @Body location: UserLocation
-        // Retrofit will now include the userId inside the JSON automatically
     ): Response<SimpleResponse>
 
     @PUT("api/address/update/{id}")
@@ -59,4 +74,16 @@ interface ApiService {
     suspend fun placeOrder(
         @Body orderRequest: OrderRequest
     ): Response<OrderResponse>
+
+    @GET("api/user/orders/{userId}")
+    suspend fun getOrderHistory(
+        @Path("userId") userId: String,
+        @Query("page") page: Int,
+        @Query("limit") limit: Int = 10
+    ): Response<OrderHistoryResponse>
+
+    @POST("/api/ratings")
+    suspend fun submitRating(
+        @Body ratingRequest: RatingRequest
+    ): Response<SimpleResponse> // SimpleResponse is just { "success": true, "message": "..." }
 }

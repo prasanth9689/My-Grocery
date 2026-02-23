@@ -5,7 +5,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import kotlinx.parcelize.Parcelize
 
-@Entity(tableName = "products") // Add this if it's missing!
+@Entity(tableName = "products")
 @Parcelize
 data class Product(
     @PrimaryKey val id: Int,

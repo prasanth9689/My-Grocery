@@ -1,5 +1,6 @@
 package com.skyblue.mygrocery.di
 
+import com.google.firebase.auth.FirebaseAuth
 import com.skyblue.mygrocery.api.ApiService
 import com.skyblue.mygrocery.db.CartDao
 import com.skyblue.mygrocery.repository.AuthRepository
@@ -9,12 +10,12 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import jakarta.inject.Singleton
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -28,15 +29,15 @@ object NetworkModule {
     @Singleton
     fun provideOkHttpClient(): OkHttpClient {
         return OkHttpClient.Builder()
-            .connectTimeout(30, TimeUnit.SECONDS) // Increased from default 10s
-            .readTimeout(30, TimeUnit.SECONDS)    // Increased from default 10s
-            .writeTimeout(30, TimeUnit.SECONDS)   // Increased from default 10s
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
             .retryOnConnectionFailure(true)
             .addInterceptor(loggingInterceptor)
             .addInterceptor(HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
             })
-            .retryOnConnectionFailure(true) // Auto retry on connection failure
+            .retryOnConnectionFailure(true)
             .build()
     }
 
@@ -70,9 +71,15 @@ object NetworkModule {
     @Singleton
     fun provideOrderRepository(
         api: ApiService,
-        cartDao: CartDao // Add this parameter
+        cartDao: CartDao
     ): OrderRepository {
         // Pass both to the constructor
         return OrderRepository(api, cartDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideFirebaseAuth(): FirebaseAuth {
+        return FirebaseAuth.getInstance()
     }
 }

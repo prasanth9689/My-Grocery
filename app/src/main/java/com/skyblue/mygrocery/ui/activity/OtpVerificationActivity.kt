@@ -5,10 +5,8 @@ import android.os.Bundle
 import android.os.CountDownTimer
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.KeyEvent
-import android.view.View
-import android.widget.EditText
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -17,24 +15,25 @@ import com.skyblue.mygrocery.databinding.ActivityOtpVerificationBinding
 import com.skyblue.mygrocery.ui.AuthViewModel
 import com.skyblue.mygrocery.utils.Resource
 import com.skyblue.mygrocery.utils.SessionHandler
+import com.skyblue.mygrocery.utils.showErrorSnackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class OtpVerificationActivity : AppCompatActivity() {
-
     private lateinit var binding: ActivityOtpVerificationBinding
     private val viewModel: AuthViewModel by viewModels()
     private var verificationId: String? = null
+    private lateinit var phone: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityOtpVerificationBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Get data from Intent
         verificationId = intent.getStringExtra("verificationId")
-        val phone = intent.getStringExtra("phoneNumber")
+        phone = intent.getStringExtra("phoneNumber").toString()
+        Log.d("PROFILE_REQ", "Phone 0: $phone")
         binding.tvOtpSubHeader.text = "OTP sent to +91 $phone"
 
         viewModel.setVerificationId(verificationId ?: "")
@@ -48,10 +47,9 @@ class OtpVerificationActivity : AppCompatActivity() {
             if (otp.length == 6) {
                 viewModel.verifyOtp(otp)
             } else {
-                Toast.makeText(this, "Please enter 6-digit OTP", Toast.LENGTH_SHORT).show()
+                showErrorSnackbar(getString(R.string.please_enter_6_digit_otp))
             }
         }
-
         binding.btnBack.setOnClickListener { finish() }
     }
 
@@ -109,39 +107,136 @@ class OtpVerificationActivity : AppCompatActivity() {
             viewModel.authState.collect { state ->
                 if (state is Resource.Success) {
                     val uid = state.data
-                    // Step 1: Login locally
-                    SessionHandler.loginUser(uid)
-                    // Step 2: Check server for existing profile
-                    viewModel.checkUserRegistration(uid)
+
+                    viewModel.syncUserWithServer(uid, phone)
+                    Log.d("RECEIVED_INTENT", "Phone: $phone")
+
+                } else if (state is Resource.Error) {
+                    showErrorSnackbar(state.message)
+
+                    // Clear the OTP fields
+                    binding.etOtp1.text?.clear()
+                    binding.etOtp2.text?.clear()
+                    binding.etOtp3.text?.clear()
+                    binding.etOtp4.text?.clear()
+                    binding.etOtp5.text?.clear()
+                    binding.etOtp6.text?.clear()
+                    binding.etOtp1.requestFocus() // Put cursor back at the start
                 }
             }
         }
 
+        // Stage 2: Server Verification Result
         lifecycleScope.launch {
             viewModel.syncState.collect { state ->
                 when (state) {
-                    is Resource.Loading -> {
-                        binding.btnVerify.isEnabled = false
-                        // Show loading indicator
-                    }
                     is Resource.Success -> {
-                        // User exists! Sync data and go to Home
-                        val userName = state.data.name ?: ""
-                        val userEmail = state.data.email ?: ""
+                        val userResponse = state.data
 
-                        SessionHandler.updateUserProfile(userName, userEmail)
-                        val intent = Intent(this@OtpVerificationActivity, NotificationPermissionActivity::class.java)
-                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                        startActivity(intent)
+                        if (userResponse.isNewUser) {
+                            val phone = intent.getStringExtra("phoneNumber") ?: ""
+                            userResponse.data?.let { userData ->
+                                SessionHandler.savePhoneNumberAndUserId(phone, userData.userId ?: "")
+                            }
+
+                            navigateTo(true) // true means open profile setup activity for new user's
+                        } else {
+                            userResponse.data?.let { userData ->
+                                SessionHandler.loginUser(
+                                    userData.userId ?: "",
+                                    userData.name ?: "",
+                                    userData.email ?: ""
+                                )
+                            }
+
+                            Log.d("SERVER_RESPONSE", "Data: ${userResponse.data}")
+                            navigateTo(false)
+                        }
                     }
                     is Resource.Error -> {
-                        binding.btnVerify.isEnabled = true
-                        val intent = Intent(this@OtpVerificationActivity, ProfileSetupActivity::class.java)
-                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                        startActivity(intent)                    }
+                        showErrorSnackbar(state.message)
+                    }
                     else -> {}
                 }
             }
         }
     }
+
+    private fun navigateTo(boolean: Boolean) {
+        val intent = Intent(this, NotificationPermissionActivity::class.java)
+        if (boolean){
+            intent.putExtra("notification_activity", boolean)
+        }
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+    }
+
+//    private fun observeAuthState() {
+//        lifecycleScope.launch {
+//            viewModel.authState.collect { state ->
+//                when(state){
+//                    is Resource.Loading -> {
+//                        binding.btnVerify.isEnabled = false
+//                        // Optional: Show a progress bar or loading state
+//                    }
+//                    is Resource.Success -> {
+//                        val uid = state.data
+//                        SessionHandler.loginUser(uid)
+//                        // Proceed to check if user profile exists on your server
+//                       // viewModel.checkUserRegistration(uid)
+//                    }
+//                    is Resource.Error -> {
+//                        binding.btnVerify.isEnabled = true
+//                        showErrorSnackbar(state.message)
+//
+//                        // Clear the OTP fields
+//                        binding.etOtp1.text?.clear()
+//                        binding.etOtp2.text?.clear()
+//                        binding.etOtp3.text?.clear()
+//                        binding.etOtp4.text?.clear()
+//                        binding.etOtp5.text?.clear()
+//                        binding.etOtp6.text?.clear()
+//                        binding.etOtp1.requestFocus() // Put cursor back at the start
+//                    }
+//                    else -> {}
+//                }
+//            }
+//        }
+//
+//        lifecycleScope.launch {
+//            viewModel.syncState.collect { state ->
+//                when (state) {
+//                    is Resource.Loading -> {
+//                        binding.btnVerify.isEnabled = false
+//                        // Show loading indicator
+//                    }
+//                    is Resource.Success -> {
+//                        // User exists! Sync data and go to Home
+//                        val userName = state.data.name ?: ""
+//                        val userEmail = state.data.email ?: ""
+//
+//                        Log.d("PROFILE_REQ", "UserName 1: $userName")
+//                        Log.d("PROFILE_REQ", "Email 1: $userEmail")
+//
+//                        val phone = intent.getStringExtra("phoneNumber")
+//
+//                        SessionHandler.savePhoneNumber(phone.toString())
+//                        SessionHandler.updateUserProfile(userName, userEmail)
+//                        val intent = Intent(this@OtpVerificationActivity, NotificationPermissionActivity::class.java)
+//                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+//                        startActivity(intent)
+//                    }
+//                    is Resource.Error -> {
+//                        val phone = intent.getStringExtra("phoneNumber") ?: ""
+//                        SessionHandler.savePhoneNumber(phone)
+//                        binding.btnVerify.isEnabled = true
+//                        val intent = Intent(this@OtpVerificationActivity, ProfileSetupActivity::class.java)
+//                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+//                        startActivity(intent)
+//                    }
+//                    else -> {}
+//                }
+//            }
+//        }
+//    }
 }

@@ -4,10 +4,9 @@ import com.skyblue.mygrocery.api.ApiService
 import com.skyblue.mygrocery.db.LocationDao
 import com.skyblue.mygrocery.model.UserLocation
 import com.skyblue.mygrocery.utils.Resource
-import jakarta.inject.Inject
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
-// Inside LocationRepository.kt
 class LocationRepository @Inject constructor(
     private val locationDao: LocationDao,
     private val api: ApiService
@@ -15,13 +14,10 @@ class LocationRepository @Inject constructor(
     val allLocations: Flow<List<UserLocation>> = locationDao.getAllLocations()
     val currentSavedLocation: Flow<UserLocation?> = locationDao.getCurrentLocation()
 
-    // This is the missing function
     suspend fun setCurrentLocation(location: UserLocation) {
-        // If your DAO has a specific method for current location
         locationDao.insertLocation(location)
     }
 
-    // Your existing saveFullAddress function for the Zepto-style form
     suspend fun saveFullAddress(location: UserLocation): Resource<Unit> {
 
         if (location.userId.isNullOrEmpty()) {

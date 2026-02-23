@@ -14,7 +14,7 @@ import com.skyblue.mygrocery.utils.Converters
         Product::class,
         CartItem::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

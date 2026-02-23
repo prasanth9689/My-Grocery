@@ -1,5 +1,6 @@
 package com.skyblue.mygrocery.ui.activity
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -14,6 +15,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.core.widget.addTextChangedListener
@@ -23,6 +25,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.firebase.auth.FirebaseAuth
 import com.skyblue.mygrocery.R
 import com.skyblue.mygrocery.databinding.ActivityHomeBinding
 import com.skyblue.mygrocery.databinding.LayoutAddLocationBinding
@@ -35,6 +38,7 @@ import com.skyblue.mygrocery.ui.viewmodel.LocationViewModel
 import com.skyblue.mygrocery.ui.viewmodel.ProductViewModel
 import com.skyblue.mygrocery.utils.Resource
 import com.skyblue.mygrocery.utils.SessionHandler
+import com.skyblue.mygrocery.utils.ThemeHelper
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -75,6 +79,9 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Inside your Application class onCreate
+        val isDark = ThemeHelper.isDarkModeEnabled(this)
+        ThemeHelper.applyTheme(this, isDark)
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -87,6 +94,8 @@ class HomeActivity : AppCompatActivity() {
         observeLocationState()
         observeLocations()
         observeActiveLocation()
+
+        requestNotificationPermission()
 
         if (isLocationPermissionGranted()) {
             viewModelLocation.fetchCurrentLocation()
@@ -103,6 +112,9 @@ class HomeActivity : AppCompatActivity() {
             val intent = Intent(this, SavedAddressesActivity::class.java)
             startActivity(intent)
         }
+
+        setupNavigationDrawer()
+        updateNavHeader()
     }
 
     private fun setupRecyclerView() {
@@ -457,6 +469,77 @@ class HomeActivity : AppCompatActivity() {
         // Open Saved Locations on click
         binding.toolbar.locationLayout.setOnClickListener {
             startActivity(Intent(this, SavedAddressesActivity::class.java))
+        }
+    }
+
+    private fun setupNavigationDrawer() {
+        // 1. My Orders Click
+        binding.navDrawerLayout.layoutOrders.setOnClickListener {
+            startActivity(Intent(this, OrderHistoryActivity::class.java))
+            closeDrawer()
+        }
+
+        // 2. My Profile Click
+        binding.navDrawerLayout.myAccount.setOnClickListener {
+            // Uncomment if you have a ProfileActivity
+            // startActivity(Intent(this, ProfileActivity::class.java))
+            closeDrawer()
+        }
+
+        // 3. Saved Addresses Click
+        binding.navDrawerLayout.about.setOnClickListener {
+            // startActivity(Intent(this, SavedAddressesActivity::class.java))
+            closeDrawer()
+        }
+
+        // 4. Logout Click
+        binding.navDrawerLayout.logout.setOnClickListener {
+            performLogout()
+        }
+    }
+
+    private fun updateNavHeader() {
+        val userName = SessionHandler.getUserName() // Get from SharedPreferences
+        binding.navDrawerLayout.tvDisplayName.text = if (userName.isNullOrEmpty()) "Guest User" else userName
+    }
+
+    private fun performLogout() {
+        // Clear session and Firebase Auth
+        FirebaseAuth.getInstance().signOut()
+        SessionHandler.logoutUser()
+
+        // Redirect to Login and clear activity stack
+        val intent = Intent(this, LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
+    }
+
+    private fun closeDrawer() {
+        if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            binding.drawerLayout.closeDrawer(GravityCompat.START)
+        }
+    }
+
+    private fun setupThemeToggle() {
+        val isDark = ThemeHelper.isDarkModeEnabled(this)
+        binding.navDrawerLayout.switchDarkMode.isChecked = isDark
+
+        binding.navDrawerLayout.switchDarkMode.setOnCheckedChangeListener { _, isChecked ->
+            ThemeHelper.applyTheme(this, isChecked)
+
+            // Dark mode change usually recreates the activity to apply colors
+            // closing drawer first for a smooth transition
+            closeDrawer()
+        }
+    }
+
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
+                PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 101)
+            }
         }
     }
 }

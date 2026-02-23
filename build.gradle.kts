@@ -5,4 +5,7 @@ plugins {
     alias(libs.plugins.hilt) apply false
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.kotlin.parcelize) apply false
+
+    // Important need read google-services.json
+    id("com.google.gms.google-services") version "4.4.0" apply false
 }

@@ -2,21 +2,39 @@ package com.skyblue.mygrocery.ui.activity
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.util.Patterns
 import android.view.View
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.skyblue.mygrocery.databinding.ActivityProfileSetupBinding
+import com.skyblue.mygrocery.ui.AuthViewModel
+import com.skyblue.mygrocery.utils.Resource
 import com.skyblue.mygrocery.utils.SessionHandler
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import androidx.lifecycle.viewModelScope
+import com.skyblue.mygrocery.utils.showErrorSnackbar
+import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class ProfileSetupActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityProfileSetupBinding
+    private val viewModel: AuthViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityProfileSetupBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        val phone = SessionHandler.getPhoneNumber() ?: ""
+        Log.d("PROFILE_REQ", "Phone 1: $phone")
+
+        observeViewModel()
+        observeProfileUpdate()
 
         binding.btnSubmitProfile.setOnClickListener {
             validateAndSubmit()
@@ -26,6 +44,7 @@ class ProfileSetupActivity : AppCompatActivity() {
     private fun validateAndSubmit() {
         val name = binding.etFullName.text.toString().trim()
         val email = binding.etEmail.text.toString().trim()
+        val phone = SessionHandler.getPhoneNumber() ?: ""
 
         if (name.isEmpty()) {
             binding.tilName.error = "Please enter your name"
@@ -41,26 +60,62 @@ class ProfileSetupActivity : AppCompatActivity() {
         binding.tilName.error = null
         binding.tilEmail.error = null
 
-        saveProfile(name, email)
+        viewModel.saveProfile(name, email, phone)
     }
 
-    private fun saveProfile(name: String, email: String) {
-        binding.progressBar.visibility = View.VISIBLE
-        binding.btnSubmitProfile.isEnabled = false
+    private fun observeViewModel() {
+        lifecycleScope.launch {
+            // Change 'profileStatus' to 'profileResponse' to match your ViewModel
+            viewModel.profileResponse.collect { result ->
+                when (result) {
+                    is Resource.Loading -> {
+                        binding.progressBar.visibility = View.VISIBLE
+                        binding.btnSubmitProfile.isEnabled = false
+                    }
+                    is Resource.Success -> {
+                        binding.progressBar.visibility = View.GONE
+                        // Success logic here
+                        navigateToHome()
+                    }
+                    is Resource.Error -> {
+                        binding.progressBar.visibility = View.GONE
+                        binding.btnSubmitProfile.isEnabled = true
+                        Toast.makeText(this@ProfileSetupActivity, result.message, Toast.LENGTH_SHORT).show()
+                    }
+                    else -> Unit
+                }
+            }
+        }
+    }
 
-        // Update session handler with the extra details
-        // Note: You might want to update your SessionHandler to include 'name'
-        SessionHandler.updateUserProfile(name, email)
+    private fun navigateToHome() {
+        val intent = Intent(this, HomeActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
+    }
 
-        // Simulate a small delay for quality feel or call your API here
-        binding.root.postDelayed({
-            binding.progressBar.visibility = View.GONE
-
-            // Move to Notification Permission screen
-            val intent = Intent(this, NotificationPermissionActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
-            finish()
-        }, 1000)
+    private fun observeProfileUpdate() {
+        lifecycleScope.launch {
+            viewModel.profileResponse.collect { resource ->
+                when (resource) {
+                    is Resource.Loading -> {
+                        binding.progressBar.visibility = View.VISIBLE
+                        binding.btnSubmitProfile.isEnabled = false
+                    }
+                    is Resource.Success -> {
+                        binding.progressBar.visibility = View.GONE
+                        Toast.makeText(this@ProfileSetupActivity, "Profile Saved!", Toast.LENGTH_SHORT).show()
+                        navigateToHome()
+                    }
+                    is Resource.Error -> {
+                        binding.progressBar.visibility = View.GONE
+                        binding.btnSubmitProfile.isEnabled = true
+                        showErrorSnackbar(resource.message ?: "Unknown Error")
+                    }
+                    else -> Unit
+                }
+            }
+        }
     }
 }

@@ -5,20 +5,23 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kotlin.parcelize)
+
+    id("com.google.gms.google-services") // This line is the "magic" that initializes Firebase
 }
 
 android {
     namespace = "com.skyblue.mygrocery"
-    compileSdk = 36
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.skyblue.mygrocery"
-        minSdk = 24
-        targetSdk = 36
+        minSdk = 23
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables.useSupportLibrary = true
     }
 
     buildTypes {
@@ -114,4 +117,17 @@ dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 
     implementation("com.airbnb.android:lottie:6.3.0")
+
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+    implementation("com.google.firebase:firebase-messaging-ktx:23.4.1")
+    implementation("com.google.android.play:integrity:1.3.0")
+   // implementation("com.google.firebase:firebase-appcheck-debug")
+
+    /*
+       Multi-Dex Support
+
+Since you are using Firebase, Hilt, and Retrofit, your app likely has many methods. Older Android
+versions (API 20 and below) have a limit. Enable MultiDex to prevent installation errors on older devices:
+     */
+    implementation("androidx.multidex:multidex:2.0.1")
 }
