@@ -13,15 +13,12 @@ import com.skyblue.mygrocery.databinding.ActivityProfileSetupBinding
 import com.skyblue.mygrocery.ui.AuthViewModel
 import com.skyblue.mygrocery.utils.Resource
 import com.skyblue.mygrocery.utils.SessionHandler
-import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
-import androidx.lifecycle.viewModelScope
 import com.skyblue.mygrocery.utils.showErrorSnackbar
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class ProfileSetupActivity : AppCompatActivity() {
-
     private lateinit var binding: ActivityProfileSetupBinding
     private val viewModel: AuthViewModel by viewModels()
 
@@ -31,7 +28,7 @@ class ProfileSetupActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         val phone = SessionHandler.getPhoneNumber() ?: ""
-        Log.d("PROFILE_REQ", "Phone 1: $phone")
+        Log.d("PROFILE_", "Phone: $phone")
 
         observeViewModel()
         observeProfileUpdate()
@@ -56,7 +53,6 @@ class ProfileSetupActivity : AppCompatActivity() {
             return
         }
 
-        // Clear errors
         binding.tilName.error = null
         binding.tilEmail.error = null
 
@@ -65,7 +61,6 @@ class ProfileSetupActivity : AppCompatActivity() {
 
     private fun observeViewModel() {
         lifecycleScope.launch {
-            // Change 'profileStatus' to 'profileResponse' to match your ViewModel
             viewModel.profileResponse.collect { result ->
                 when (result) {
                     is Resource.Loading -> {
@@ -74,7 +69,6 @@ class ProfileSetupActivity : AppCompatActivity() {
                     }
                     is Resource.Success -> {
                         binding.progressBar.visibility = View.GONE
-                        // Success logic here
                         navigateToHome()
                     }
                     is Resource.Error -> {

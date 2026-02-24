@@ -47,14 +47,11 @@ import java.util.Calendar
 
 @AndroidEntryPoint
 class HomeActivity : AppCompatActivity() {
-
     private lateinit var binding: ActivityHomeBinding
     private val viewModel: ProductViewModel by viewModels()
     private val cartViewModel: CartViewModel by viewModels()
     private val viewModelLocation: LocationViewModel by viewModels()
-
     private var searchJob: Job? = null
-
     private var currentLat: Double = 0.0
     private var currentLong: Double = 0.0
 
@@ -79,11 +76,19 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Inside your Application class onCreate
         val isDark = ThemeHelper.isDarkModeEnabled(this)
         ThemeHelper.applyTheme(this, isDark)
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        val userId = SessionHandler.getUserId()
+        val phone = SessionHandler.getPhoneNumber()
+        val email = SessionHandler.getUserEmail()
+        val userName = SessionHandler.getUserName()
+        Log.d("HOME_", "User Id: ${userId}")
+        Log.d("HOME_", "Phone No: ${phone}")
+        Log.d("HOME_", "Email Id: ${email}")
+        Log.d("HOME_", "User Name: ${userName}")
 
         updateGreetingUI()
         setupRecyclerView()
@@ -100,7 +105,6 @@ class HomeActivity : AppCompatActivity() {
         if (isLocationPermissionGranted()) {
             viewModelLocation.fetchCurrentLocation()
         } else {
-            // Request permissions using your existing launcher
             requestLocationPermission()
         }
 
@@ -243,7 +247,6 @@ class HomeActivity : AppCompatActivity() {
                 }
             }
         }
-
         binding.toolbar.bottomCartCard.setOnClickListener {
             startActivity(Intent(this, CartActivity::class.java))
         }
@@ -291,7 +294,7 @@ class HomeActivity : AppCompatActivity() {
                         val shortAddress = state.location.address?.take(20) + "..."
                         binding.toolbar.locationTxt.text = shortAddress
 
-                        Log.d("Location", "Location short address $shortAddress")
+                        Log.d("Home_", "Location short address $shortAddress")
 
                         openLocationAddActivity(currentLat, currentLong, shortAddress)
 
@@ -309,11 +312,9 @@ class HomeActivity : AppCompatActivity() {
         currentLong: Double,
         shortAddress: String
     ) {
-        // 'this' now refers to HomeActivity, which is a Context
         val intent = Intent(this, AddLocationActivity::class.java).apply {
             putExtra("lat", currentLat)
             putExtra("long", currentLong)
-            // Using the passed shortAddress or the binding value
             putExtra("address", shortAddress)
         }
         startActivity(intent)
@@ -322,7 +323,7 @@ class HomeActivity : AppCompatActivity() {
     private fun observeLocations() {
         lifecycleScope.launch {
             viewModelLocation.allLocations.collect { locations ->
-                Log.d("MainActivity", "Saved locations: ${locations.size}")
+                Log.d("Home_", "Saved locations: ${locations.size}")
             }
         }
     }
@@ -380,7 +381,6 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun isLocationPermissionGranted(): Boolean {
-        // Use this@HomeActivity instead of just this
         val fineLocation = ContextCompat.checkSelfPermission(
             this@HomeActivity,
             android.Manifest.permission.ACCESS_FINE_LOCATION
@@ -451,10 +451,8 @@ class HomeActivity : AppCompatActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModelLocation.currentSavedLocation.collect { location ->
                     location?.let {
-                        // Update Text
                         binding.toolbar.locationTxt.text = it.locationType
 
-                        // Update Icon based on Type
                         val iconRes = when (it.locationType) {
                             "Home" -> R.drawable.ic_home_location
                             "Work" -> R.drawable.ic_work_location
@@ -466,41 +464,37 @@ class HomeActivity : AppCompatActivity() {
             }
         }
 
-        // Open Saved Locations on click
         binding.toolbar.locationLayout.setOnClickListener {
             startActivity(Intent(this, SavedAddressesActivity::class.java))
         }
     }
 
     private fun setupNavigationDrawer() {
-        // 1. My Orders Click
         binding.navDrawerLayout.layoutOrders.setOnClickListener {
             startActivity(Intent(this, OrderHistoryActivity::class.java))
             closeDrawer()
         }
 
-        // 2. My Profile Click
         binding.navDrawerLayout.myAccount.setOnClickListener {
             // Uncomment if you have a ProfileActivity
             // startActivity(Intent(this, ProfileActivity::class.java))
             closeDrawer()
         }
 
-        // 3. Saved Addresses Click
+
         binding.navDrawerLayout.about.setOnClickListener {
-            // startActivity(Intent(this, SavedAddressesActivity::class.java))
+            startActivity(Intent(this, SavedAddressesActivity::class.java))
             closeDrawer()
         }
 
-        // 4. Logout Click
         binding.navDrawerLayout.logout.setOnClickListener {
             performLogout()
         }
     }
 
     private fun updateNavHeader() {
-        val userName = SessionHandler.getUserName() // Get from SharedPreferences
-        binding.navDrawerLayout.tvDisplayName.text = if (userName.isNullOrEmpty()) "Guest User" else userName
+        val userName = SessionHandler.getUserName()
+        binding.navDrawerLayout.tvDisplayName.text = if (userName.isNullOrEmpty()) "" else userName
     }
 
     private fun performLogout() {

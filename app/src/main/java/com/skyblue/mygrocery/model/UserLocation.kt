@@ -17,7 +17,6 @@ data class UserLocation(
     val timestamp: Long = System.currentTimeMillis(),
     val isCurrentLocation: Boolean = false,
 
-    // New Zepto-style fields
     val locationType: String = "Home", // Home, Work, Friend, Other
     val receiverName: String? = null,
     val receiverPhone: String? = null,

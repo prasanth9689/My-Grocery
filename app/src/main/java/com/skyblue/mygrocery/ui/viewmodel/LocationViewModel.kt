@@ -8,7 +8,6 @@ import com.skyblue.mygrocery.utils.LocationManager
 import com.skyblue.mygrocery.utils.Resource
 import com.skyblue.mygrocery.utils.SessionHandler
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Singleton
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -57,17 +56,17 @@ class LocationViewModel @Inject constructor(
                     ) ?: "Address not available"
 
                     val userLocation = UserLocation(
-                        userId = currentUserId, // Add this line
+                        userId = currentUserId,
                         latitude = location.latitude,
                         longitude = location.longitude,
                         address = address,
                         locationType = "Home", // Default type for auto-pings
-                        receiverName = "",     // Placeholder for new location
-                        receiverPhone = "",    // Placeholder
-                        floorDetail = "",      // Placeholder
-                        areaLandmark = "",     // Placeholder
+                        receiverName = "",
+                        receiverPhone = "",
+                        floorDetail = "",
+                        areaLandmark = "",
                         isCurrentLocation = true,
-                        isSavedAddress = false  // Since this is likely a GPS fetch, not a form save
+                        isSavedAddress = false
                     )
 
                     repository.setCurrentLocation(userLocation)
@@ -87,7 +86,6 @@ class LocationViewModel @Inject constructor(
         }
     }
 
-    // Inside LocationViewModel.kt
     val currentSavedLocation: StateFlow<UserLocation?> = repository.currentSavedLocation
         .stateIn(
             scope = viewModelScope,
@@ -97,10 +95,8 @@ class LocationViewModel @Inject constructor(
 
     fun saveAddress(location: UserLocation) {
         viewModelScope.launch {
-            // Start loading
             _saveState.value = Resource.Loading
 
-            // Use your merged repository logic
             val result = repository.saveFullAddress(location)
             _saveState.value = result
         }
@@ -108,7 +104,6 @@ class LocationViewModel @Inject constructor(
 
     fun updateActiveAddress(location: UserLocation) {
         viewModelScope.launch {
-            // We tell the repository to switch the 'isCurrentLocation' flag
             repository.toggleActiveAddress(location.id)
         }
     }

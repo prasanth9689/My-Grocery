@@ -19,7 +19,6 @@ class NotificationPermissionActivity : AppCompatActivity() {
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         // Whether granted or not, we move to Home.
-        // We just tried our best to get permission.
         startMainActivity()
     }
 
@@ -55,13 +54,7 @@ class NotificationPermissionActivity : AppCompatActivity() {
     }
 
     private fun startMainActivity() {
-        // Declare the intent variable first
-        val intent = if (notification_activity == true) {
-            Intent(this, ProfileSetupActivity::class.java)
-        } else {
-            Intent(this, HomeActivity::class.java)
-        }
-
+        Intent(this, ProfileSetupActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()

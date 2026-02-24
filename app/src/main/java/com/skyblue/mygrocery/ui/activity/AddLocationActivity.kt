@@ -100,6 +100,11 @@ class AddLocationActivity : AppCompatActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.saveState.collect { state ->
                     when (state) {
+                        is Resource.Idle -> {
+                            // Ensure button is enabled when nothing is happening
+                            binding.btnSaveAddress.isEnabled = true
+                            binding.progressBar.visibility = View.GONE
+                        }
                         is Resource.Loading -> {
                             binding.btnSaveAddress.isEnabled = false
                             binding.progressBar.visibility = View.VISIBLE

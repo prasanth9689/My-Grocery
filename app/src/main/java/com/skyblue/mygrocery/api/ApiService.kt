@@ -16,8 +16,6 @@ import com.skyblue.mygrocery.model.VerifyUserRequest
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
-import retrofit2.http.Field
-import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -25,7 +23,7 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ApiService {
-    @GET("api/products")
+    @GET("api/products") // Completed
     suspend fun getProducts(
         @Query("page") page: Int
     ): Response<List<Product>>
@@ -38,18 +36,15 @@ interface ApiService {
     @POST("api/profile")
     suspend fun updateProfile(@Body request: ProfileRequest): Response<ProfileResponse>
 
-    @POST("api/verify_user") // Ensure this matches your server path
+    @POST("api/verify_user") // Completed
     suspend fun verifyUser(
         @Body request: VerifyUserRequest
     ): Response<UserStatusResponse>
 
-    @POST("api/user/save-address")
-    suspend fun uploadLocation(@Body location: UserLocation): Response<Unit>
-
     @DELETE("api/user/delete-address/{id}")
     suspend fun deleteAddressFromServer(@Path("id") addressId: Int): Response<Unit>
 
-    @POST("/api/addresses")
+    @POST("/api/addresses") // Working
     suspend fun uploadUserAddress(
         @Body location: UserLocation
     ): Response<SimpleResponse>

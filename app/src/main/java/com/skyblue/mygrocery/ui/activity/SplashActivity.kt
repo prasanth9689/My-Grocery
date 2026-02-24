@@ -38,9 +38,9 @@ class SplashActivity : AppCompatActivity() {
             startActivity(Intent(this, LoginActivity::class.java))
         }
         // If logged in but name is missing -> Go to Profile Setup
-        else if (SessionHandler.getUserName() == "Guest" || SessionHandler.getUserName().isEmpty()) {
-            startActivity(Intent(this, ProfileSetupActivity::class.java))
-        }
+//        else if (SessionHandler.getUserName() == "Guest" || SessionHandler.getUserName().isEmpty()) {
+//            startActivity(Intent(this, ProfileSetupActivity::class.java))
+//        }
         // Everything is set -> Go to Home
         else {
             startActivity(Intent(this, HomeActivity::class.java))

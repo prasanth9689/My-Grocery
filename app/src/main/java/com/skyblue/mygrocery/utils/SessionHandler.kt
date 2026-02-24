@@ -9,7 +9,6 @@ import androidx.core.content.edit
 object SessionHandler {
     private var PREFS_KEY = "prefs"
     private const val MODE = Context.MODE_PRIVATE
-    private var EMAIL_KEY = "email"
     private var PWD_KEY = "pwd"
     private var KEY_USER_UID = "user_uid"
     private var KEY_USER_ID = "user_id"
@@ -39,11 +38,12 @@ object SessionHandler {
         return sharedPreferences.getString(KEY_PHONE, null)
     }
 
-    fun loginUser(userId: String, phone: String, email: String) {
+    fun loginUser(userId: String, phone: String, email: String, name: String) {
         sharedPreferences.edit().apply {
             putString(KEY_USER_ID, userId)
             putString(KEY_PHONE, phone)
-            putString(EMAIL_KEY, email)
+            putString(KEY_USER_EMAIL, email)
+            putString(KEY_USER_NAME, name)
             putBoolean(KEY_IS_LOGGED_IN, true)
             apply()
         }
@@ -53,7 +53,7 @@ object SessionHandler {
         return sharedPreferences.getString(KEY_USER_ID, KEY_EMPTY) ?: KEY_EMPTY
     }
 
-    fun getUserName(): String = sharedPreferences.getString(KEY_USER_NAME, "Guest") ?: "Guest"
+    fun getUserName(): String = sharedPreferences.getString(KEY_USER_NAME, "") ?: ""
     fun getUserEmail(): String = sharedPreferences.getString(KEY_USER_EMAIL, "") ?: ""
 
     fun updateUserProfile(name: String, email: String) {
@@ -81,7 +81,7 @@ object SessionHandler {
         val user = User()
         user.userId =
             sharedPreferences.getString(KEY_USER_ID, KEY_EMPTY) // Ensure User model has id
-        user.email = sharedPreferences.getString(EMAIL_KEY, KEY_EMPTY)
+        user.email = sharedPreferences.getString(KEY_USER_EMAIL, KEY_EMPTY)
         user.password = sharedPreferences.getString(PWD_KEY, KEY_EMPTY)
         user.sessionExpiryDate = Date(sharedPreferences.getLong(KEY_EXPIRES, 0))
 
