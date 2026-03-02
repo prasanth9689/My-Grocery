@@ -70,4 +70,7 @@
         vestibulum. Fusce dictum libero quis erat maximus, vitae volutpat diam dignissim.
     </string>
     <string name="please_enter_6_digit_otp">Please enter 6-digit OTP</string>
+    <string name="loading_privacy_policy">Loading privacy policy</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="agree">Agree</string>
 </resources>

@@ -1,5 +1,6 @@
 package com.skyblue.mygrocery.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.skyblue.mygrocery.model.OrderRequest
@@ -111,6 +112,25 @@ class OrderViewModel @Inject constructor(
             } else {
                 // Optional: Fetch from API if not found in memory
                 // _selectedOrder.value = repository.getOrderDetail(orderId)
+            }
+        }
+    }
+
+    private val _activeOrder = MutableStateFlow<OrderRequest?>(null)
+    val activeOrder: StateFlow<OrderRequest?> = _activeOrder.asStateFlow()
+
+    // In OrderViewModel.kt
+    fun fetchActiveOrder(userId: String) {
+        viewModelScope.launch {
+            repository.getOrders(userId).collect { resource ->
+                if (resource is Resource.Success) {
+                    // Now 'it.status' is recognized by the compiler
+                    val latest = resource.data?.firstOrNull {
+                        it.status != "Delivered" && it.status != "Cancelled"
+                    }
+                    Log.d("ORDER_", latest?.status.toString())
+                    _activeOrder.value = latest
+                }
             }
         }
     }

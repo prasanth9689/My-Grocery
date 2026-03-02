@@ -35,6 +35,7 @@ import com.skyblue.mygrocery.ui.adapter.ProductAdapter
 import com.skyblue.mygrocery.ui.viewmodel.CartViewModel
 import com.skyblue.mygrocery.ui.viewmodel.LocationState
 import com.skyblue.mygrocery.ui.viewmodel.LocationViewModel
+import com.skyblue.mygrocery.ui.viewmodel.OrderViewModel
 import com.skyblue.mygrocery.ui.viewmodel.ProductViewModel
 import com.skyblue.mygrocery.utils.Resource
 import com.skyblue.mygrocery.utils.SessionHandler
@@ -51,6 +52,7 @@ class HomeActivity : AppCompatActivity() {
     private val viewModel: ProductViewModel by viewModels()
     private val cartViewModel: CartViewModel by viewModels()
     private val viewModelLocation: LocationViewModel by viewModels()
+    private val orderViewModel: OrderViewModel by viewModels()
     private var searchJob: Job? = null
     private var currentLat: Double = 0.0
     private var currentLong: Double = 0.0
@@ -68,7 +70,10 @@ class HomeActivity : AppCompatActivity() {
     ) { permissions ->
         val allGranted = permissions.values.all { it }
         if (allGranted) {
-            viewModelLocation.fetchCurrentLocation()
+            // Check if we actually need to fetch (if toolbar is still "Select Location")
+            if (viewModelLocation.currentSavedLocation.value == null) {
+                viewModelLocation.fetchCurrentLocation()
+            }
         } else {
             handlePermissionDenied(permissions.keys.toList())
         }
@@ -90,6 +95,10 @@ class HomeActivity : AppCompatActivity() {
         Log.d("HOME_", "Email Id: ${email}")
         Log.d("HOME_", "User Name: ${userName}")
 
+        if (userName.isNotEmpty()){
+            binding.toolbar.txtUserName.text = userName
+        }
+
         updateGreetingUI()
         setupRecyclerView()
         setupObservers()
@@ -99,6 +108,12 @@ class HomeActivity : AppCompatActivity() {
         observeLocationState()
         observeLocations()
         observeActiveLocation()
+
+        if (userId.isNotEmpty()) {
+            orderViewModel.fetchActiveOrder(userId) // Fetch the data
+        }
+
+        observeActiveOrder()
 
         requestNotificationPermission()
 
@@ -271,37 +286,27 @@ class HomeActivity : AppCompatActivity() {
         lifecycleScope.launch {
             viewModelLocation.locationState.collect { state ->
                 when (state) {
-                    is LocationState.Idle -> {
-
-                    }
                     is LocationState.Loading -> {
-                        Toast.makeText(this@HomeActivity, "Fetching location...", Toast.LENGTH_SHORT).show()
+                        binding.toolbar.locationTxt.text = "Locating..."
                     }
                     is LocationState.Success -> {
+                        // Only open AddLocationActivity if we don't already have a saved location
+                        // This prevents the screen from popping up if the user already has an address
+                        val currentSaved = viewModelLocation.currentSavedLocation.value
 
-                        currentLat = state.location.latitude
-                        currentLong = state.location.longitude
+                        if (currentSaved == null) {
+                            currentLat = state.location.latitude
+                            currentLong = state.location.longitude
+                            val fullAddress = state.location.address ?: "Unknown Location"
 
-                        Toast.makeText(
-                            this@HomeActivity,
-                            "Location: ${state.location.latitude}, ${state.location.longitude}",
-                            Toast.LENGTH_LONG
-                        ).show()
-
-                        Log.d("Location", "Latitude ${state.location.latitude} /n" +
-                                "                       Longitude ${state.location.longitude}")
-
-                        val shortAddress = state.location.address?.take(20) + "..."
-                        binding.toolbar.locationTxt.text = shortAddress
-
-                        Log.d("Home_", "Location short address $shortAddress")
-
-                        openLocationAddActivity(currentLat, currentLong, shortAddress)
-
+                            openLocationAddActivity(currentLat, currentLong, fullAddress)
+                        }
                     }
                     is LocationState.Error -> {
-                        Toast.makeText(this@HomeActivity, state.message, Toast.LENGTH_LONG).show()
+                        binding.toolbar.locationTxt.text = "Select Location"
+                        Toast.makeText(this@HomeActivity, state.message, Toast.LENGTH_SHORT).show()
                     }
+                    else -> {}
                 }
             }
         }
@@ -436,10 +441,20 @@ class HomeActivity : AppCompatActivity() {
                 viewModelLocation.currentSavedLocation.collect { location ->
                     location?.let {
                         // Update your toolbar with the saved address name or short address
-                        binding.toolbar.locationTxt.text = it.address ?: "Select Location"
+                        val fullAddress= it.address ?: "Select Location"
+
+                        // Logic: Take only the part before the first comma (usually House No or Area)
+                        // Example: "Flat 402, Blue Heaven, Chennai" -> "Flat 402"
+                        val displayAddress = if (fullAddress.contains(",")) {
+                            fullAddress.substringBefore(",")
+                        } else {
+                            fullAddress.take(25) // Fallback to first 25 characters
+                        }
+
+                        binding.toolbar.locationTxt.text = displayAddress
 
                         // If it's a Zepto style "Home" or "Work" label
-                        binding.toolbar.locationTxt.text = it.locationType
+                       // binding.toolbar.locationTxt.text = it.locationType
                     }
                 }
             }
@@ -450,22 +465,37 @@ class HomeActivity : AppCompatActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModelLocation.currentSavedLocation.collect { location ->
-                    location?.let {
-                        binding.toolbar.locationTxt.text = it.locationType
+                    if (location != null) {
+                        // 1. If saved location is found, set the text
+                       // binding.toolbar.locationTxt.text = location.address ?: "Select Location"
 
-                        val iconRes = when (it.locationType) {
+                        val fullAddress = location.address ?: "Select Location"
+
+                        // Logic: Take only the part before the first comma (usually House No or Area)
+                        // Example: "Flat 402, Blue Heaven, Chennai" -> "Flat 402"
+                        val displayAddress = if (fullAddress.contains(",")) {
+                            fullAddress.substringBefore(",")
+                        } else {
+                            fullAddress.take(25) // Fallback to first 25 characters
+                        }
+
+                        binding.toolbar.locationTxt.text = displayAddress
+
+                        // Set the icon based on type (Home/Work/etc)
+                        val iconRes = when (location.locationType) {
                             "Home" -> R.drawable.ic_home_location
                             "Work" -> R.drawable.ic_work_location
                             else -> R.drawable.ic_other_location
                         }
                         binding.toolbar.imgLocationIcon.setImageResource(iconRes)
+                    } else {
+                        // 2. If NOT found/enabled, trigger the GPS fetch
+                        if (isLocationPermissionGranted()) {
+                            viewModelLocation.fetchCurrentLocation()
+                        }
                     }
                 }
             }
-        }
-
-        binding.toolbar.locationLayout.setOnClickListener {
-            startActivity(Intent(this, SavedAddressesActivity::class.java))
         }
     }
 
@@ -476,14 +506,18 @@ class HomeActivity : AppCompatActivity() {
         }
 
         binding.navDrawerLayout.myAccount.setOnClickListener {
-            // Uncomment if you have a ProfileActivity
-            // startActivity(Intent(this, ProfileActivity::class.java))
+             startActivity(Intent(this, ProfileActivity::class.java))
             closeDrawer()
         }
 
 
         binding.navDrawerLayout.about.setOnClickListener {
             startActivity(Intent(this, SavedAddressesActivity::class.java))
+            closeDrawer()
+        }
+
+        binding.navDrawerLayout.privacyPolicy.setOnClickListener {
+            startActivity(Intent(this, PrivacyPolicyActivity::class.java))
             closeDrawer()
         }
 
@@ -533,6 +567,42 @@ class HomeActivity : AppCompatActivity() {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
                 PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 101)
+            }
+        }
+    }
+
+    private fun observeActiveOrder() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                orderViewModel.activeOrder.collect { order ->
+                    if (order != null && order.status != "Delivered") {
+
+                        // 1. Show/Animate the card
+                        if (binding.toolbar.trackOrderCard.visibility == View.GONE) {
+                            binding.toolbar.trackOrderCard.visibility = View.VISIBLE
+                            binding.toolbar.trackOrderCard.alpha = 0f
+                            binding.toolbar.trackOrderCard.translationY = 50f
+                            binding.toolbar.trackOrderCard.animate()
+                                .translationY(0f)
+                                .alpha(1f)
+                                .setDuration(300)
+                                .start()
+                        }
+
+                        // 2. Safely access orderId (use ?. or provide default)
+                        val idText = order.orderId ?: "000"
+                        binding.toolbar.tvOrderStatus.text = "Order #$idText: ${order.status}"
+
+                        // 3. Setup Click Listener
+                        binding.toolbar.trackOrderCard.setOnClickListener {
+                            val intent = Intent(this@HomeActivity, TrackOrderActivity::class.java)
+                            intent.putExtra("order_id", idText)
+                            startActivity(intent)
+                        }
+                    } else {
+                        binding.toolbar.trackOrderCard.visibility = View.GONE
+                    }
+                }
             }
         }
     }

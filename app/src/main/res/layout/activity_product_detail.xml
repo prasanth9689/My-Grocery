@@ -57,13 +57,35 @@
             android:orientation="vertical"
             android:padding="24dp">
 
-            <TextView
-                android:id="@+id/tvDetailName"
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/black"
-                android:textSize="24sp"
-                android:textStyle="bold" />
+                android:background="@color/white">
+
+                <TextView
+                    android:id="@+id/tvDetailName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/black"
+                    android:text="Hello"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAddToCartDetail"
+                    android:layout_width="wrap_content"
+                    android:layout_height="56dp"
+
+                    android:layout_alignParentEnd="true"
+                    app:elevation="8dp"
+                    android:visibility="visible"
+                    android:text="Add to Cart"
+                    app:backgroundTint="@color/primaryDark"
+                    app:cornerRadius="8dp"
+                    app:icon="@drawable/ic_cart"
+                    app:iconGravity="textStart"
+                    app:tint="@color/white" />
+            </RelativeLayout>
 
             <TextView
                 android:id="@+id/tvDetailPrice"
@@ -97,17 +119,5 @@
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabAddToCart"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:src="@drawable/ic_cart"
-        android:visibility="invisible"
-        app:backgroundTint="@color/primaryDark"
-        app:layout_anchor="@id/app_bar"
-        app:layout_anchorGravity="bottom|end"
-        app:tint="@color/white" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

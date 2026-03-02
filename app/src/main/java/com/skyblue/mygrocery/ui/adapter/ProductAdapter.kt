@@ -29,31 +29,15 @@ class ProductAdapter(
             binding.tvName.text = product.name
             binding.tvPrice.text = binding.root.context.getString(R.string.rupees) + product.price
 
-            val fullImageUrl = "https://test2.skyblue.co.in/images/" + product.image
+            val fullImageUrl = "https://test2.skyblue.co.in/uploads/tenant_1/" + product.image
+            Log.d("PRODUCT_ADAPTER", "Loading image: $fullImageUrl")
+
             Glide.with(binding.imgProduct.context)
                 .load(fullImageUrl)
-                .addListener(object : RequestListener<Drawable> {
-
-                    @SuppressLint("CheckResult")
-                    override fun onLoadFailed(
-                        e: GlideException?,
-                        model: Any?,
-                        target: com.bumptech.glide.request.target.Target<Drawable?>,
-                        isFirstResource: Boolean
-                    ): Boolean {
-                        TODO("Not yet implemented")
-                    }
-
-                    override fun onResourceReady(
-                        resource: Drawable,
-                        model: Any,
-                        target: Target<Drawable?>?,
-                        dataSource: DataSource,
-                        isFirstResource: Boolean
-                    ): Boolean {
-                        TODO("Not yet implemented")
-                    }
-                })
+                .placeholder(R.drawable.placeholder_image) // Show this while loading
+                .error(R.drawable.error_image)             // Show this if URL is dead
+                .centerCrop()                                       // Optional: keeps UI looking neat
+                .into(binding.imgProduct)                  // CRITICAL: This was missing
 
             binding.root.setOnClickListener {
                 Log.d("CLICK_TEST", "Standard click for: ${product.name}")

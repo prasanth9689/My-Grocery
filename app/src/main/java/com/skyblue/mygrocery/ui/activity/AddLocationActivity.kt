@@ -1,6 +1,8 @@
 package com.skyblue.mygrocery.ui.activity
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -19,12 +21,9 @@ import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class AddLocationActivity : AppCompatActivity() {
-
     private lateinit var binding: ActivityAddLocationBinding
     private val viewModel: LocationViewModel by viewModels()
     lateinit var session: SessionHandler
-
-    // Variables to hold data passed from HomeActivity
     private var latitude: Double = 0.0
     private var longitude: Double = 0.0
     private var fullAddress: String? = ""
@@ -36,17 +35,18 @@ class AddLocationActivity : AppCompatActivity() {
 
         session = SessionHandler
 
-        // 1. Get data passed from HomeActivity
         latitude = intent.getDoubleExtra("lat", 0.0)
         longitude = intent.getDoubleExtra("long", 0.0)
         fullAddress = intent.getStringExtra("address")
 
-        // Display the fetched address in a non-editable text view or hint
         binding.tvSelectedAddress.text = fullAddress
 
         setupListeners()
         observeSaveStatus()
-        observeSaveStatus()
+
+        binding.btnSaveAddress.isEnabled = true
+
+        setupTextWatchers()
     }
 
     private fun setupListeners() {
@@ -124,6 +124,27 @@ class AddLocationActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun setupTextWatchers() {
+        val watcher = object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                val name = binding.etName.text.toString().trim()
+                val phone = binding.etPhone.text.toString().trim()
+                val floor = binding.etFloor.text.toString().trim()
+
+                // Enable button only if required fields are not empty
+                binding.btnSaveAddress.isEnabled = name.isNotEmpty() &&
+                        phone.isNotEmpty() &&
+                        floor.isNotEmpty()
+            }
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        }
+
+        binding.etName.addTextChangedListener(watcher)
+        binding.etPhone.addTextChangedListener(watcher)
+        binding.etFloor.addTextChangedListener(watcher)
     }
 
 }

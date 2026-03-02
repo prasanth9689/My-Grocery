@@ -23,6 +23,11 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ApiService {
+    @GET("/api/orders/user/{userId}/pending")
+    suspend fun getUserPendingOrders(
+        @Path("userId") userId: String
+    ): Response<List<OrderRequest>>
+
     @GET("api/products") // Completed
     suspend fun getProducts(
         @Query("page") page: Int
@@ -44,7 +49,7 @@ interface ApiService {
     @DELETE("api/user/delete-address/{id}")
     suspend fun deleteAddressFromServer(@Path("id") addressId: Int): Response<Unit>
 
-    @POST("/api/addresses") // Working
+    @POST("/api/addresses") // Completed
     suspend fun uploadUserAddress(
         @Body location: UserLocation
     ): Response<SimpleResponse>
@@ -65,12 +70,18 @@ interface ApiService {
         @Path("uid") firebaseUid: String
     ): Response<UserProfileResponse>
 
-    @POST("api/orders/place")
+
+    /*
+    POST  /api/orders/place
+    GET   /api/orders/user/{userId}
+    GET   /api/orders/{orderId}
+     */
+    @POST("/api/orders/place") // Completed (GET  /api/orders/user/5)
     suspend fun placeOrder(
         @Body orderRequest: OrderRequest
     ): Response<OrderResponse>
 
-    @GET("api/user/orders/{userId}")
+    @GET("/api/orders/user/{userId}") // Completed
     suspend fun getOrderHistory(
         @Path("userId") userId: String,
         @Query("page") page: Int,
@@ -80,5 +91,5 @@ interface ApiService {
     @POST("/api/ratings")
     suspend fun submitRating(
         @Body ratingRequest: RatingRequest
-    ): Response<SimpleResponse> // SimpleResponse is just { "success": true, "message": "..." }
+    ): Response<SimpleResponse>
 }

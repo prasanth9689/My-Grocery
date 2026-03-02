@@ -28,7 +28,7 @@ class LocationViewModel @Inject constructor(
     val allLocations: StateFlow<List<UserLocation>> = repository.allLocations
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    private val _saveState = MutableStateFlow<Resource<Unit>>(Resource.Loading) // Default or Idle
+    private val _saveState = MutableStateFlow<Resource<Unit>>(Resource.Idle) // Default or Idle
     val saveState: StateFlow<Resource<Unit>> = _saveState
 
     private val _updateState = MutableStateFlow<Resource<Unit>>(Resource.Idle)

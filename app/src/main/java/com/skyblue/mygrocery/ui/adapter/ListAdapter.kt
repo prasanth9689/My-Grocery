@@ -26,7 +26,7 @@ class CartAdapter(private val onDeleteClick: (CartItem) -> Unit) :
 
         fun bind(item: CartItem) {
             binding.tvCartName.text = item.name
-            binding.tvCartPrice.text = "$${item.price}"
+            binding.tvCartPrice.text = "₹${item.price}"
             binding.tvQuantity.text = "Qty: ${item.quantity}"
 
             Glide.with(binding.imgCart.context)

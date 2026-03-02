@@ -7,6 +7,8 @@ import com.skyblue.mygrocery.model.OrderResponse
 import com.skyblue.mygrocery.model.OrderSummary
 import com.skyblue.mygrocery.model.RatingRequest
 import com.skyblue.mygrocery.utils.Resource
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 class OrderRepository @Inject constructor(
@@ -64,6 +66,20 @@ class OrderRepository @Inject constructor(
             }
         } catch (e: Exception) {
             Resource.Error("Network error: ${e.localizedMessage}")
+        }
+    }
+
+    fun getOrders(userId: String): Flow<Resource<List<OrderRequest>>> = flow {
+        emit(Resource.Loading)
+        try {
+            val response = apiService.getUserPendingOrders(userId)
+            if (response.isSuccessful) {
+                emit(Resource.Success(response.body()!!))
+            } else {
+                emit(Resource.Error(response.message()))
+            }
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "An error occurred"))
         }
     }
 }

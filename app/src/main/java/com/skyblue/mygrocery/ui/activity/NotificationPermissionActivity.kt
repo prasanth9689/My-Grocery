@@ -54,9 +54,9 @@ class NotificationPermissionActivity : AppCompatActivity() {
     }
 
     private fun startMainActivity() {
-        Intent(this, ProfileSetupActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)
+        val nextIntent = Intent(this, HomeActivity::class.java)
+        nextIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(nextIntent)
         finish()
     }
 }
