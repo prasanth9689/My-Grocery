@@ -25,12 +25,26 @@ class UpdateLocationActivity : AppCompatActivity() {
         binding = ActivityUpdateLocationBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val location = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        binding.btnBack.setOnClickListener {
+            finish()
+        }
+
+        // FIX: Assign directly to the lateinit property 'existingLocation'
+        val data = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             intent.getParcelableExtra("location_data", UserLocation::class.java)
         } else {
-            // For older versions
             @Suppress("DEPRECATION")
             intent.getParcelableExtra<UserLocation>("location_data")
+        }
+
+        if (data != null) {
+            existingLocation = data // Initialization happens here
+            preFillData()
+            setupListeners()
+            observeUpdateStatus()
+        } else {
+            Toast.makeText(this, "Location data not found", Toast.LENGTH_SHORT).show()
+            finish()
         }
 
         preFillData()

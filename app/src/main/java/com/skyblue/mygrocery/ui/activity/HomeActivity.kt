@@ -466,22 +466,16 @@ class HomeActivity : AppCompatActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModelLocation.currentSavedLocation.collect { location ->
                     if (location != null) {
-                        // 1. If saved location is found, set the text
-                       // binding.toolbar.locationTxt.text = location.address ?: "Select Location"
-
+                        // Update UI with Saved Address
                         val fullAddress = location.address ?: "Select Location"
-
-                        // Logic: Take only the part before the first comma (usually House No or Area)
-                        // Example: "Flat 402, Blue Heaven, Chennai" -> "Flat 402"
                         val displayAddress = if (fullAddress.contains(",")) {
                             fullAddress.substringBefore(",")
                         } else {
-                            fullAddress.take(25) // Fallback to first 25 characters
+                            fullAddress.take(25)
                         }
 
                         binding.toolbar.locationTxt.text = displayAddress
 
-                        // Set the icon based on type (Home/Work/etc)
                         val iconRes = when (location.locationType) {
                             "Home" -> R.drawable.ic_home_location
                             "Work" -> R.drawable.ic_work_location
@@ -489,8 +483,10 @@ class HomeActivity : AppCompatActivity() {
                         }
                         binding.toolbar.imgLocationIcon.setImageResource(iconRes)
                     } else {
-                        // 2. If NOT found/enabled, trigger the GPS fetch
-                        if (isLocationPermissionGranted()) {
+                        // ONLY fetch if we don't have a saved one AND we haven't tried yet
+                        // Check if the current state is already 'Loading' to prevent double calls
+                        val currentState = viewModelLocation.locationState.value
+                        if (isLocationPermissionGranted() && currentState !is LocationState.Loading) {
                             viewModelLocation.fetchCurrentLocation()
                         }
                     }

@@ -8,6 +8,7 @@ import retrofit2.Response
 import javax.inject.Inject
 import javax.inject.Singleton
 import com.skyblue.mygrocery.utils.Resource
+import kotlinx.coroutines.flow.Flow
 
 @Singleton
 class ProductRepository @Inject constructor(
@@ -33,5 +34,26 @@ class ProductRepository @Inject constructor(
         } catch (e: Exception) {
             Resource.Error(e.message ?: "An error occurred")
         }
+    }
+
+    suspend fun updateQuantity(productId: String, isIncrement: Boolean) {
+        if (isIncrement) {
+            cartDao.incrementQuantity(productId)
+        } else {
+            val currentQty = cartDao.getQuantity(productId)
+            if (currentQty <= 1) {
+                cartDao.removeItem(productId)
+            } else {
+                cartDao.decrementQuantity(productId)
+            }
+        }
+    }
+
+    suspend fun removeItem(productId: String) {
+        cartDao.removeItem(productId)
+    }
+
+    fun getAllCartItems(): Flow<List<CartItem>> {
+        return cartDao.getAllItems()
     }
 }

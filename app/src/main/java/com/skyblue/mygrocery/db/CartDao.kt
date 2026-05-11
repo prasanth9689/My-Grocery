@@ -32,4 +32,19 @@ interface CartDao {
         clearActiveStatus()
         setActiveStatus(targetId)
     }
+
+    @Query("UPDATE cart_table SET quantity = quantity + 1 WHERE id = :id")
+    suspend fun incrementQuantity(id: String)
+
+    @Query("UPDATE cart_table SET quantity = quantity - 1 WHERE id = :id")
+    suspend fun decrementQuantity(id: String)
+
+    @Query("DELETE FROM cart_table WHERE id = :id")
+    suspend fun removeItem(id: String)
+
+    @Query("SELECT quantity FROM cart_table WHERE id = :id")
+    suspend fun getQuantity(id: String): Int
+
+    @Query("SELECT * FROM cart_table")
+    fun getAllItems(): Flow<List<CartItem>>
 }

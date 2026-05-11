@@ -3,7 +3,7 @@
     <style name="Base.Theme.MyGrocery" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/primaryColor</item>
         <item name="colorPrimaryDark">@color/primaryDark</item>
-        <item name="colorAccent">#F497B7</item>
+        <item name="colorAccent">#009D05</item>
 
         <item name="android:windowContentTransitions">true</item>
         <item name="android:windowSharedElementEnterTransition">@android:transition/move</item>

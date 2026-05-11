@@ -29,8 +29,10 @@ class CartAdapter(private val onDeleteClick: (CartItem) -> Unit) :
             binding.tvCartPrice.text = "₹${item.price}"
             binding.tvQuantity.text = "Qty: ${item.quantity}"
 
+            val fullImageUrl = "https://test2.skyblue.co.in/uploads/tenant_1/" + item.image
+
             Glide.with(binding.imgCart.context)
-                .load(item.image)
+                .load(fullImageUrl)
                 .into(binding.imgCart)
 
             binding.btnDelete.setOnClickListener { onDeleteClick(item) }

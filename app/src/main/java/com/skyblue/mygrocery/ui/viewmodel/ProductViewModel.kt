@@ -11,7 +11,10 @@ import com.skyblue.mygrocery.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -93,4 +96,32 @@ class ProductViewModel @Inject constructor(
             _res.value = repository.searchProducts(query)
         }
     }
+
+    fun increaseItemQuantity(product: Product) {
+        viewModelScope.launch {
+            // Logic: Find the item in the cart and increment its quantity
+            repository.updateQuantity(product.id.toString(), isIncrement = true)
+        }
+    }
+
+    fun decreaseItemQuantity(product: Product) {
+        viewModelScope.launch {
+            // Logic: Find the item and decrement. Repository should handle
+            // removing the item if quantity reaches 0.
+            repository.updateQuantity(product.id.toString(), isIncrement = false)
+        }
+    }
+
+    fun removeItemFromCart(product: Product) {
+        viewModelScope.launch {
+            repository.removeItem(product.id.toString())
+        }
+    }
+
+    val cartItems: StateFlow<List<CartItem>> = repository.getAllCartItems()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 }

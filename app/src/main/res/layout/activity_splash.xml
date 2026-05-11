@@ -5,7 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/main"
-    android:background="@color/action_blue">
+    android:background="@color/primaryDark">
+
+<!--    android:background="@color/action_blue"-->
 
 <!--    android:src="@drawable/ic_app_logo_white"-->
 
@@ -13,7 +15,7 @@
         android:id="@+id/ivLogo"
         android:layout_width="180dp"
         android:layout_height="180dp"
-        android:src="@drawable/ic_home"
+        android:src="@drawable/ic_cart"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
